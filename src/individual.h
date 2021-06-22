@@ -52,6 +52,9 @@ struct individual{
 	float traced_on_this_trace;
 
 	short app_user;
+	short novid_user;
+	long **novid_adj_list;
+	long *novid_n_adj;
 
 	short ward_idx;
 	short ward_type;

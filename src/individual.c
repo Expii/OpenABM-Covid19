@@ -31,6 +31,7 @@ void initialize_individual(
 	indiv->status      = SUSCEPTIBLE;
 	indiv->quarantined = FALSE;
 	indiv->app_user	   = FALSE;
+	indiv->novid_user  = FALSE;
 
 	indiv->n_interactions = calloc( params->days_of_interactions, sizeof( short ) );
 	indiv->interactions   = calloc( params->days_of_interactions, sizeof( interaction* ) );
@@ -87,6 +88,8 @@ void initialize_individual(
 	}
 
 	indiv->vaccine_status = NO_VACCINE;
+	indiv->novid_adj_list = calloc( 3, sizeof( long* ) );
+	indiv->novid_n_adj = calloc( 3, sizeof( long ) );
 }
 
 /*****************************************************************************************

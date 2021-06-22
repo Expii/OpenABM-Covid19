@@ -79,6 +79,49 @@ void set_up_app_users( model *model )
 }
 
 /*****************************************************************************************
+*  Name:		set_up_novid_users
+*  Description: Set up the proportion of NOVID app users in the population
+******************************************************************************************/
+void set_up_novid_users( model *model )
+{
+	long idx, jdx, age, current_users, not_users, max_user;
+	double fraction = 0.3; // NOVID app adoption
+
+	for( age = 0; age < N_AGE_GROUPS; age++ )
+	{
+		current_users = 0;
+		not_users     = 0;
+		for( idx = 0; idx < model->params->n_total; idx++ )
+			if( model->population[ idx ].age_group == age )
+			{
+				current_users += model->population[ idx ].novid_user;
+				not_users     += 1 - model->population[ idx ].novid_user;
+			}
+
+		if( ( current_users + not_users) == 0 )
+			continue;
+
+		max_user = ceil( ( current_users + not_users ) * fraction ) - current_users;
+		if( max_user < 0 || max_user > not_users )
+			print_exit( "Bad target novid_fraction_users" );
+
+		int *users = calloc( not_users, sizeof( int ) );
+
+		for( idx = 0; idx < max_user; idx++ )
+			users[ idx ] = 1;
+
+		gsl_ran_shuffle( rng, users, not_users, sizeof( int ) );
+
+		jdx   = 0;
+		for( idx = 0; idx < model->params->n_total; idx++ )
+			if( model->population[ idx ].age_group == age && model->population[ idx ].novid_user == FALSE )
+				model->population[ idx ].novid_user = users[ jdx++ ];
+
+		free( users );
+	}
+}
+
+/*****************************************************************************************
 *  Name:		set_up_risk_scores
 *  Description: Set up the risk scores used in calculation whether people are quarantined
 ******************************************************************************************/

@@ -138,6 +138,7 @@ void add_event_block( model* , float );
 void set_up_strains( model* );
 void set_up_seed_infection( model* );
 void set_up_networks( model* );
+void set_up_novid_network( model* );
 void set_up_counters( model* );
 void reset_counters( model* );
 void set_up_occupation_network( model* );

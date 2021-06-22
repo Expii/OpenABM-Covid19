@@ -14,6 +14,7 @@
 #include "interventions.h"
 #include "demographics.h"
 #include "hospital.h"
+#include "hashset.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -81,6 +82,8 @@ model* new_model( parameters *params )
 	set_up_app_users( model_ptr );
 	set_up_trace_tokens( model_ptr, 0.01 );
 	set_up_risk_scores( model_ptr );
+	set_up_novid_users( model_ptr );
+	set_up_novid_network( model_ptr );
 
 	model_ptr->n_quarantine_days = 0;
 
@@ -280,6 +283,73 @@ void set_up_networks( model *model )
 	model->mean_interactions = estimate_mean_interactions_by_age( model, -1 );
 	for( idx = 0; idx < N_AGE_TYPES; idx++ )
 		model->mean_interactions_by_age[idx] = estimate_mean_interactions_by_age( model, idx );
+}
+
+/*****************************************************************************************
+*  Name:		set_up_novid_network
+*  Description: sets up NOVID network
+*  Returns:		void
+******************************************************************************************/
+void set_up_novid_network( model *model )
+{
+	long n_total = model->params->n_total;
+	individual *indivs = model->population;
+
+	hashset **all = calloc(n_total, sizeof(hashset*));
+	hashset ***adj_set = calloc(n_total, sizeof(hashset**));
+	for (long i = 0; i < n_total; i++) {
+		all[i] = init_set();
+		set_insert(all[i], i);
+		adj_set[i] = calloc(3, sizeof(hashset*));
+		for (int j = 0; j < 3; j++)
+			adj_set[i][j] = init_set();
+	}
+
+	network *net;
+	for (int j = 0; j <= model->n_occupation_networks; j++) {
+		if (j < model->n_occupation_networks)
+			net = model->occupation_network[j];
+		else
+			net = model->household_network;
+		for (long i = 0; i < net->n_edges; i++) {
+			long a = net->edges[i].id1;
+			long b = net->edges[i].id2;
+			set_insert(adj_set[a][0], b);
+			set_insert(adj_set[b][0], a);
+			set_insert(all[a], b);
+			set_insert(all[b], a);
+		}
+	}
+
+	for (long i = 0; i < n_total; i++) {
+		indivs[i].novid_n_adj[0] = adj_set[i][0]->size;
+		indivs[i].novid_adj_list[0] = set_to_list(adj_set[i][0]);
+	}
+	for (int d = 1; d < 3; d++) {
+		for (long i = 0; i < n_total; i++) {
+			for (long j = 0; j < indivs[i].novid_n_adj[d-1]; j++) {
+				long v = indivs[i].novid_adj_list[d-1][j];
+				for (int k = 0; k < indivs[v].novid_n_adj[0]; k++) {
+					long w = indivs[v].novid_adj_list[0][k];
+					if (!set_contains(all[i], w)) {
+						set_insert(adj_set[i][d], w);
+						set_insert(all[i], w);
+					}
+				}
+			}
+			indivs[i].novid_n_adj[d] = adj_set[i][d]->size;
+			indivs[i].novid_adj_list[d] = set_to_list(adj_set[i][d]);
+		}
+	}
+
+	for (long i = 0; i < n_total; i++) {
+		destroy_set(all[i]);
+		for (int j = 0; j < 3; j++)
+			destroy_set(adj_set[i][j]);
+		free(adj_set[i]);
+	}
+	free(all);
+	free(adj_set);
 }
 
 /*****************************************************************************************
