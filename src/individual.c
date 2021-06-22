@@ -531,11 +531,11 @@ void set_discharged( individual *indiv, parameters* params, int time )
 ******************************************************************************************/
 short get_caution_level( individual *indiv, int time )
 {
-	if (indiv->caution_level_time = time)
+	if (indiv->caution_level_time == time)
 		return indiv->caution_level;
 	short level = 4;
 	for (int i = 3; i >= 0; i--) {
-		if (indiv->last_novid_alert[i] >= time - caution_time) // TODO: check for off by one error
+		if (indiv->last_novid_alert[i] >= time - 7) // TODO: check for off by one error
 			level = i;
 	}
 	indiv->caution_level = level;

@@ -1306,6 +1306,8 @@ void intervention_on_positive_result( model *model, individual *indiv )
 	indiv->index_token_release_event = add_individual_to_event_list( model, TRACE_TOKEN_RELEASE, indiv, release_time, NULL );
 
 	remove_traced_on_this_trace( model, indiv );
+
+	
 }
 
 /******************************************************************************************

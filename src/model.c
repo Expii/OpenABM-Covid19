@@ -325,7 +325,7 @@ void set_up_novid_network( model *model )
 		indivs[i].novid_n_adj[0] = 1;
 		indivs[i].novid_adj_list[0] = calloc(1, sizeof(long));
 		indivs[i].novid_adj_list[0][0] = i;
-		indivs[i].novid_n_adj[1] = adj_set[i][1]->size;
+		indivs[i].novid_n_adj[1] = set_size(adj_set[i][1]);
 		indivs[i].novid_adj_list[1] = set_to_list(adj_set[i][1]);
 	}
 	for (int d = 2; d < 4; d++) {
@@ -340,15 +340,16 @@ void set_up_novid_network( model *model )
 					}
 				}
 			}
-			indivs[i].novid_n_adj[d] = adj_set[i][d]->size;
+			indivs[i].novid_n_adj[d] = set_size(adj_set[i][d]);
 			indivs[i].novid_adj_list[d] = set_to_list(adj_set[i][d]);
 		}
 	}
 
 	for (long i = 0; i < n_total; i++) {
 		destroy_set(all[i]);
-		for (int j = 0; j < 4; j++)
+		for (int j = 0; j < 4; j++) {
 			destroy_set(adj_set[i][j]);
+		}
 		free(adj_set[i]);
 	}
 	free(all);

@@ -23,6 +23,7 @@ covid19_module = Extension(
         "demographics.c",
         "disease.c",
         "doctor.c",
+        "hashset.c",
         "hospital.c",
         "individual.c",
         "input.c",
