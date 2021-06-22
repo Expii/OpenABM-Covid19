@@ -88,8 +88,14 @@ void initialize_individual(
 	}
 
 	indiv->vaccine_status = NO_VACCINE;
-	indiv->novid_adj_list = calloc( 3, sizeof( long* ) );
-	indiv->novid_n_adj = calloc( 3, sizeof( long ) );
+
+	indiv->novid_adj_list = calloc(4, sizeof(long*));
+	indiv->novid_n_adj = calloc(4, sizeof(long));
+	indiv->last_novid_alert = calloc(4, sizeof(long));
+	for (int i = 0; i < 4; i++)
+		indiv->last_novid_alert[i] = -1000;
+	indiv->caution_level = 4;
+	indiv->caution_level_time = 0;
 }
 
 /*****************************************************************************************
@@ -516,6 +522,25 @@ void set_discharged( individual *indiv, parameters* params, int time )
 {
 	indiv->hospital_state = DISCHARGED;
 	indiv->current_hospital_event = NULL;
+}
+
+/*****************************************************************************************
+*  Name:		get_caution_level
+*  Description: updates and returns the caution level of a person at a specific time
+*  Returns:		the caution level
+******************************************************************************************/
+short get_caution_level( individual *indiv, int time )
+{
+	if (indiv->caution_level_time = time)
+		return indiv->caution_level;
+	short level = 4;
+	for (int i = 3; i >= 0; i--) {
+		if (indiv->last_novid_alert[i] >= time - caution_time) // TODO: check for off by one error
+			level = i;
+	}
+	indiv->caution_level = level;
+	indiv->caution_level_time = time;
+	return level;
 }
 
 /*****************************************************************************************

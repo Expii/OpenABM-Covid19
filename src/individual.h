@@ -52,9 +52,13 @@ struct individual{
 	float traced_on_this_trace;
 
 	short app_user;
+
 	short novid_user;
 	long **novid_adj_list;
 	long *novid_n_adj;
+	long *last_novid_alert;
+	short caution_level;		// lazily updated
+	short caution_level_time;	// time that caution_level was last computed
 
 	short ward_idx;
 	short ward_type;

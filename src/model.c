@@ -300,8 +300,8 @@ void set_up_novid_network( model *model )
 	for (long i = 0; i < n_total; i++) {
 		all[i] = init_set();
 		set_insert(all[i], i);
-		adj_set[i] = calloc(3, sizeof(hashset*));
-		for (int j = 0; j < 3; j++)
+		adj_set[i] = calloc(4, sizeof(hashset*));
+		for (int j = 0; j < 4; j++)
 			adj_set[i][j] = init_set();
 	}
 
@@ -322,15 +322,18 @@ void set_up_novid_network( model *model )
 	}
 
 	for (long i = 0; i < n_total; i++) {
-		indivs[i].novid_n_adj[0] = adj_set[i][0]->size;
-		indivs[i].novid_adj_list[0] = set_to_list(adj_set[i][0]);
+		indivs[i].novid_n_adj[0] = 1;
+		indivs[i].novid_adj_list[0] = calloc(1, sizeof(long));
+		indivs[i].novid_adj_list[0][0] = i;
+		indivs[i].novid_n_adj[1] = adj_set[i][1]->size;
+		indivs[i].novid_adj_list[1] = set_to_list(adj_set[i][1]);
 	}
-	for (int d = 1; d < 3; d++) {
+	for (int d = 2; d < 4; d++) {
 		for (long i = 0; i < n_total; i++) {
 			for (long j = 0; j < indivs[i].novid_n_adj[d-1]; j++) {
 				long v = indivs[i].novid_adj_list[d-1][j];
-				for (int k = 0; k < indivs[v].novid_n_adj[0]; k++) {
-					long w = indivs[v].novid_adj_list[0][k];
+				for (int k = 0; k < indivs[v].novid_n_adj[1]; k++) {
+					long w = indivs[v].novid_adj_list[1][k];
 					if (!set_contains(all[i], w)) {
 						set_insert(adj_set[i][d], w);
 						set_insert(all[i], w);
@@ -344,7 +347,7 @@ void set_up_novid_network( model *model )
 
 	for (long i = 0; i < n_total; i++) {
 		destroy_set(all[i]);
-		for (int j = 0; j < 3; j++)
+		for (int j = 0; j < 4; j++)
 			destroy_set(adj_set[i][j]);
 		free(adj_set[i]);
 	}
