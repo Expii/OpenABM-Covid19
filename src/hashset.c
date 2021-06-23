@@ -38,7 +38,6 @@ hashset *init_set(void) {
 	if (hs == NULL)
 		return NULL;
 
-	hs->log_size = -1;
 	hs->n_data = 0;
 	return hs;
 }
@@ -51,7 +50,7 @@ void destroy_set(hashset *hs) {
 }
 
 bool set_empty(hashset *hs) {
-	return hs == NULL || hs->log_size == -1;
+	return hs == NULL || hs->n_data == 0;
 }
 
 uint32_t set_size(hashset *hs) {
@@ -65,11 +64,11 @@ void set_resize(hashset *hs, uint32_t size) {
 	if (size < 8)
 		size = 8;
 	short log_size = log_2(size-1) + 1;
+	bool empty = set_empty(hs);
 
-	if (log_size > hs->log_size) {
+	if (empty || log_size > hs->log_size) {
 		uint32_t old_n_data = hs->n_data;
 		elem *old_data = hs->data;
-		bool old_empty = set_empty(hs);
 
 		hs->log_size = log_size;
 		hs->size = 0; // will be incremented back to original value after reinserting
@@ -81,7 +80,7 @@ void set_resize(hashset *hs, uint32_t size) {
 			hs->data[i].shift = -1; // empty
 		hs->data[hs->n_data].shift = 0; // mark as non-empty
 
-		if (!old_empty) {
+		if (!empty) {
 			for (uint32_t i = 0; i < old_n_data; i++) {
 				if (old_data[i].shift >= 0)
 					set_insert(hs, old_data[i].key);

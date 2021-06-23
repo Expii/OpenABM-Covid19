@@ -314,16 +314,18 @@ void set_up_novid_network( model *model )
 		for (long i = 0; i < net->n_edges; i++) {
 			long a = net->edges[i].id1;
 			long b = net->edges[i].id2;
-			set_insert(adj_set[a][0], b);
-			set_insert(adj_set[b][0], a);
-			set_insert(all[a], b);
-			set_insert(all[b], a);
+			if (indivs[a].novid_user && indivs[b].novid_user) {
+				set_insert(adj_set[a][0], b);
+				set_insert(adj_set[b][0], a);
+				set_insert(all[a], b);
+				set_insert(all[b], a);
+			}
 		}
 	}
 
 	for (long i = 0; i < n_total; i++) {
-		indivs[i].novid_n_adj[0] = 1;
-		indivs[i].novid_adj_list[0] = calloc(1, sizeof(long));
+		indivs[i].novid_n_adj[0] = indivs[i].novid_user;
+		indivs[i].novid_adj_list[0] = calloc(indivs[i].novid_user, sizeof(long));
 		indivs[i].novid_adj_list[0][0] = i;
 		indivs[i].novid_n_adj[1] = set_size(adj_set[i][1]);
 		indivs[i].novid_adj_list[1] = set_to_list(adj_set[i][1]);

@@ -1307,7 +1307,7 @@ void intervention_on_positive_result( model *model, individual *indiv )
 
 	remove_traced_on_this_trace( model, indiv );
 
-	
+	intervention_novid_alert( model, indiv, 0 );
 }
 
 /******************************************************************************************
@@ -1477,3 +1477,19 @@ int resolve_quarantine_reasons(int *quarantine_reasons)
 	return UNKNOWN;
 }
 
+/*****************************************************************************************
+*  Name:		intervention_novid_alert
+*  Description: If the individual is a NOVID user and has a positive case at distance dist
+*  				(either self positive, dist = 0 or contact-traced positive, dist = 1),
+*  				alert other NOVID app users nearby
+*  Returns:		void
+******************************************************************************************/
+void intervention_novid_alert(model *model, individual *indiv, int dist) {
+	for (int d = 0; d + dist < 4; d++) {
+		for (long i = 0; i < indiv->novid_n_adj[d]; i++) {
+			long idx2 = indiv->novid_adj_list[d][i];
+			individual *indiv2 = &(model->population[idx2]);
+			indiv2->last_novid_alert[d+dist] = model->time;
+		}
+	}
+}

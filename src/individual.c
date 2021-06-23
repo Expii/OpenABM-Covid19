@@ -93,7 +93,7 @@ void initialize_individual(
 	indiv->novid_n_adj = calloc(4, sizeof(long));
 	indiv->last_novid_alert = calloc(4, sizeof(long));
 	for (int i = 0; i < 4; i++)
-		indiv->last_novid_alert[i] = -1000;
+		indiv->last_novid_alert[i] = -1000; // TODO: replace with parameter
 	indiv->caution_level = 4;
 	indiv->caution_level_time = 0;
 }
@@ -566,6 +566,11 @@ void destroy_individual( individual *indiv )
 	free( indiv->immune_full );
 	free( indiv->immune_to_symptoms );
 	free( indiv->immune_to_severe );
+	for (int i = 0; i < 4; i++)
+		free( indiv->novid_adj_list[i] );
+	free( indiv->novid_adj_list );
+	free( indiv->novid_n_adj );
+	free( indiv->last_novid_alert );
 }
 
 /*****************************************************************************************
