@@ -56,7 +56,7 @@ struct individual{
 	short novid_user;
 	long **novid_adj_list;
 	long *novid_n_adj;
-	long *last_novid_alert;
+	short *last_novid_alert;
 	short caution_level;		// lazily updated
 	short caution_level_time;	// time that caution_level was last computed
 
@@ -148,6 +148,7 @@ void set_immune( individual*, short, short, short );
 void wane_immunity( individual*, parameters*, short );
 void set_vaccine_status( individual*, parameters*, short, short, short, short );
 void update_random_interactions( individual*, parameters* );
+short get_caution_level( individual*, int );
 int count_infection_events( individual * );
 void destroy_individual( individual* );
 void print_individual( model *, long );

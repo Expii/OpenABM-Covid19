@@ -73,7 +73,7 @@ void intervention_test_result( model*, individual* );
 void intervention_manual_trace( model *, individual *);
 void intervention_notify_contacts( model*, individual*, int, trace_token*, int );
 void intervention_index_case_symptoms_to_positive( model*, trace_token* );
-void intervention_novid_alert( model*, individual*, int );
+void intervention_novid_alert( model*, individual*, int, trace_token* );
 
 short add_vaccine( model*, float*, float*, float*, short, short );
 vaccine* get_vaccine_by_id( model*, short );

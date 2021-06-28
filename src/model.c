@@ -315,8 +315,8 @@ void set_up_novid_network( model *model )
 			long a = net->edges[i].id1;
 			long b = net->edges[i].id2;
 			if (indivs[a].novid_user && indivs[b].novid_user) {
-				set_insert(adj_set[a][0], b);
-				set_insert(adj_set[b][0], a);
+				set_insert(adj_set[a][1], b);
+				set_insert(adj_set[b][1], a);
 				set_insert(all[a], b);
 				set_insert(all[b], a);
 			}
@@ -897,7 +897,7 @@ void build_random_network_user( model *model, network *network )
 
 		if( network->skip_hospitalised && is_in_hospital( indiv ) )
 			continue;
-		if( network->skip_quarantined && indiv->quarantined )
+		if( network->skip_quarantined && indiv->quarantined && !IGNORE_QUARANTINE )
 			continue;
 
 		for( jdx = 0; jdx < network->opt_int_array[ idx ]; jdx++ )
@@ -969,9 +969,9 @@ void add_interactions_from_network(
 			continue;
 		if( skip_hospitalised && ( is_in_hospital( indiv1 ) || is_in_hospital( indiv2 ) ) )
 			continue;
-		if( skip_quarantined && ( indiv1->quarantined || indiv2->quarantined ) )
-			continue;
 		if( prob_drop > 0 && gsl_ran_bernoulli( rng, prob_drop ) )
+			continue;
+		if( skip_quarantined && ( indiv1->quarantined || indiv2->quarantined ) && !IGNORE_QUARANTINE)
 			continue;
 
 		inter1 = &(inter_block->interactions[inter_idx++]);
@@ -1545,16 +1545,19 @@ int one_time_step( model *model )
 		build_daily_network( model );
 		model->rebuild_networks = model->params->rebuild_networks;
 	}
+	individual *indiv = &(model->population[8752]);
+	printf("\nSTART t = %d, nov = %d, q = %d, cl = %d, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->novid_user, indiv->quarantined, get_caution_level(indiv, model->time), is_in_hospital(indiv), indiv->last_novid_alert[0], indiv->last_novid_alert[1], indiv->last_novid_alert[2], indiv->last_novid_alert[3]);
 	transmit_virus( model );
+	printf("MID t = %d, nov = %d, q = %d, cl = %d, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->novid_user, indiv->quarantined, get_caution_level(indiv, model->time), is_in_hospital(indiv), indiv->last_novid_alert[0], indiv->last_novid_alert[1], indiv->last_novid_alert[2], indiv->last_novid_alert[3]);
 
 	transition_events( model, SYMPTOMATIC,       	   &transition_to_symptomatic,      		FALSE );
 	transition_events( model, SYMPTOMATIC_MILD,  	   &transition_to_symptomatic_mild, 		FALSE );
 	transition_events( model, HOSPITALISED,     	   &transition_to_hospitalised,     		FALSE );
 	transition_events( model, CRITICAL,          	   &transition_to_critical,         		FALSE );
 	transition_events( model, HOSPITALISED_RECOVERING, &transition_to_hospitalised_recovering,  FALSE );
-	transition_events( model, RECOVERED,         	   &transition_to_recovered,        		 FALSE );
+	transition_events( model, RECOVERED,         	   &transition_to_recovered,        		FALSE );
 	transition_events( model, SUSCEPTIBLE,			   &transition_to_susceptible,				FALSE );
-	transition_events( model, DEATH,             	   &transition_to_death,            		 FALSE );
+	transition_events( model, DEATH,             	   &transition_to_death,            		FALSE );
 
 	if( model->params->hospital_on )
 	{
@@ -1586,12 +1589,15 @@ int one_time_step( model *model )
 	transition_events_info( model, VACCINE_WANE,             &intervention_vaccine_wane, TRUE );
 
 	transition_events( model, QUARANTINE_RELEASE,     &intervention_quarantine_release, FALSE );
+	printf("B q = %d\n", indiv->quarantined);
 	transition_events( model, TRACE_TOKEN_RELEASE,    &intervention_trace_token_release,FALSE );
+	printf("C q = %d\n", indiv->quarantined);
 
 	if( model->params->quarantine_smart_release_day > 0 )
 		intervention_smart_release( model );
 
 	model->n_quarantine_days += model->event_lists[QUARANTINED].n_current;
+	printf("END t = %d, nov = %d, q = %d, cl = ?, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->novid_user, indiv->quarantined, is_in_hospital(indiv), indiv->last_novid_alert[0], indiv->last_novid_alert[1], indiv->last_novid_alert[2], indiv->last_novid_alert[3]);
 
 	return 1;
 }

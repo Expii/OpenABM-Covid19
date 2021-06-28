@@ -91,7 +91,7 @@ void initialize_individual(
 
 	indiv->novid_adj_list = calloc(4, sizeof(long*));
 	indiv->novid_n_adj = calloc(4, sizeof(long));
-	indiv->last_novid_alert = calloc(4, sizeof(long));
+	indiv->last_novid_alert = calloc(4, sizeof(short));
 	for (int i = 0; i < 4; i++)
 		indiv->last_novid_alert[i] = -1000; // TODO: replace with parameter
 	indiv->caution_level = 4;
@@ -270,7 +270,7 @@ void update_random_interactions( individual *indiv, parameters* params )
 	double n = indiv->base_random_interactions;
 	int lockdown;
 
-	if( !indiv->quarantined )
+	if( !indiv->quarantined || IGNORE_QUARANTINE)
 	{
 		lockdown = params->lockdown_on;
 		if( indiv->age_type == AGE_TYPE_ELDERLY )
@@ -531,15 +531,21 @@ void set_discharged( individual *indiv, parameters* params, int time )
 ******************************************************************************************/
 short get_caution_level( individual *indiv, int time )
 {
-	if (indiv->caution_level_time == time)
-		return indiv->caution_level;
+	if (!indiv->novid_user)
+		return 4;
+	//if (indiv->caution_level_time == time)
+		//return indiv->caution_level;
 	short level = 4;
-	for (int i = 3; i >= 0; i--) {
-		if (indiv->last_novid_alert[i] >= time - 7) // TODO: check for off by one error
+	for (short i = 3; i >= 0; i--) {
+		if (indiv->last_novid_alert[i] >= time - NOVID_CAUTION_DAYS) // TODO: check for off by one error
 			level = i;
 	}
 	indiv->caution_level = level;
 	indiv->caution_level_time = time;
+	if (!indiv->quarantined && level != 4) {
+		printf("=============================== ERROR! indiv %ld has caution level %d, should be quarantined at time t = %d\n", indiv->idx, level, time);
+		level = 4;
+	}
 	return level;
 }
 
@@ -616,7 +622,7 @@ void print_individual( model *model, long idx)
 	printf("indiv->occupation_network: %d\n", indiv->occupation_network );
 
 	printf("indiv->base_random_interactions: %d\n", indiv->base_random_interactions );
-	printf("indiv->random_interactions: %d\n", indiv->random_interactions );
+	printf("indiv->random_interactions:long %d\n", indiv->random_interactions );
 
 	printf("indiv->hazard:");
 	for( int strain_idx = 0; strain_idx < model->n_initialised_strains; strain_idx++ )

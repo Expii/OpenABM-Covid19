@@ -58,7 +58,7 @@ void set_up_app_users( model *model )
 		if( ( current_users + not_users) == 0 )
 			continue;
 
-		max_user = ceil( ( current_users + not_users ) * fraction[age] ) - current_users;
+		max_user = ceil( ( current_users + not_users ) * fraction[age] * CT_APP_ADOPTION ) - current_users;
 		if( max_user < 0 || max_user > not_users )
 			print_exit( "Bad target app_fraction_users" );
 
@@ -85,7 +85,7 @@ void set_up_app_users( model *model )
 void set_up_novid_users( model *model )
 {
 	long idx, jdx, age, current_users, not_users, max_user;
-	double fraction = 0.3; // NOVID app adoption
+	double *fraction = model->params->app_users_fraction;
 
 	for( age = 0; age < N_AGE_GROUPS; age++ )
 	{
@@ -101,7 +101,7 @@ void set_up_novid_users( model *model )
 		if( ( current_users + not_users) == 0 )
 			continue;
 
-		max_user = ceil( ( current_users + not_users ) * fraction ) - current_users;
+		max_user = ceil( ( current_users + not_users ) * fraction[age] * NOVID_APP_ADOPTION ) - current_users;
 		if( max_user < 0 || max_user > not_users )
 			print_exit( "Bad target novid_fraction_users" );
 
@@ -252,6 +252,8 @@ trace_token* index_trace_token( model *model, individual *indiv )
 		indiv->index_trace_token = create_trace_token( model, indiv, model->time );
 		indiv->index_trace_token->contact_time = model->time;
 	}
+	if (indiv->idx == 1994) 
+		printf("\ni_t_t, indiv %ld, time = %d, contact_time = %d\n\n", indiv->idx, model->time, indiv->index_trace_token->contact_time);
 
 	return indiv->index_trace_token;
 }
@@ -1003,6 +1005,8 @@ void intervention_trace_token_release( model *model, individual *indiv )
 	individual *contact;
 	trace_token *index_token = indiv->index_trace_token;
 	trace_token *next_token, *token;
+	if (indiv->idx == 1994)
+		printf("Releasing trace token from indiv %ld, time = %d\n", indiv->idx, model->time);
 
 	// remove the release token
 	if( indiv->index_token_release_event != NULL )
@@ -1027,7 +1031,8 @@ void intervention_trace_token_release( model *model, individual *indiv )
 		contact    = token->individual;
 		remove_one_trace_token( model, token );
 
-		if( (contact->trace_tokens == NULL) & (contact->index_trace_token == NULL) )
+
+		if( (contact->trace_tokens == NULL) && (contact->index_trace_token == NULL) )
 			intervention_quarantine_release( model, contact );
 	}
 
@@ -1195,9 +1200,12 @@ void intervention_on_symptoms( model *model, individual *indiv )
 
 	quarantine = indiv->quarantined || gsl_ran_bernoulli( rng, params->self_quarantine_fraction );
 
+	trace_token *index_token;
 	if( quarantine )
 	{
-		trace_token *index_token  = index_trace_token( model, indiv );
+		if (indiv->idx == 1994)
+			printf("\ni_o_s, calling i_t_t, indiv %ld, time = %d\n\n", indiv->idx, model->time);
+		index_token  = index_trace_token( model, indiv );
 		index_token->index_status = SYMPTOMS_ONLY;
 
 		time_event = model->time + sample_transition_time( model, SYMPTOMATIC_QUARANTINE );
@@ -1207,10 +1215,10 @@ void intervention_on_symptoms( model *model, individual *indiv )
 
 		if( params->quarantine_household_on_symptoms )
 			intervention_quarantine_household( model, indiv, time_event, params->quarantine_household_contacts_on_symptoms, index_token, model->time );
-
+	}
 		if( params->test_on_symptoms )
 			intervention_test_order( model, indiv, model->time + params->test_order_wait );
-
+	if (quarantine) {
 		if( params->trace_on_symptoms && ( params->quarantine_on_traced || params->test_on_traced ) )
 			intervention_notify_contacts( model, indiv, 1, index_token, DIGITAL_TRACE );
 
@@ -1271,6 +1279,8 @@ void intervention_on_positive_result( model *model, individual *indiv )
 	trace_token *index_token = index_trace_token( model, indiv );
 	index_token->index_status = POSITIVE_TEST;
 	int release_time = index_token->contact_time + params->quarantine_length_traced_positive;
+	if (indiv->idx == 1994)
+		printf("\ni_o_p_r, indiv %ld, time = %d, contact_time = %d, release_time = %d\n\n", indiv->idx, model->time, index_token->contact_time, release_time);
 
 	if( !is_in_hospital( indiv ) )
 	{
@@ -1287,6 +1297,9 @@ void intervention_on_positive_result( model *model, individual *indiv )
 	  ( params->quarantine_on_traced || params->test_on_traced )
 	)
 		intervention_notify_contacts( model, indiv, 1, index_token, DIGITAL_TRACE );
+
+	if ( indiv->novid_user )
+		intervention_novid_alert( model, indiv, 0, index_token );
 
 	if( params->manual_trace_on &&
 		( params->manual_trace_on_positive ||
@@ -1306,8 +1319,6 @@ void intervention_on_positive_result( model *model, individual *indiv )
 	indiv->index_token_release_event = add_individual_to_event_list( model, TRACE_TOKEN_RELEASE, indiv, release_time, NULL );
 
 	remove_traced_on_this_trace( model, indiv );
-
-	intervention_novid_alert( model, indiv, 0 );
 }
 
 /******************************************************************************************
@@ -1352,6 +1363,9 @@ void intervention_on_traced(
 		return;
 
 	parameters *params = model->params;
+
+	if ( indiv->novid_user ) // TODO: add probability parameter
+		intervention_novid_alert( model, indiv, 1, index_token );
 
 	if( params->quarantine_on_traced )
 	{
@@ -1484,12 +1498,16 @@ int resolve_quarantine_reasons(int *quarantine_reasons)
 *  				alert other NOVID app users nearby
 *  Returns:		void
 ******************************************************************************************/
-void intervention_novid_alert(model *model, individual *indiv, int dist) {
+void intervention_novid_alert(model *model, individual *indiv, int dist, trace_token *index_token) {
 	for (int d = 0; d + dist < 4; d++) {
 		for (long i = 0; i < indiv->novid_n_adj[d]; i++) {
 			long idx2 = indiv->novid_adj_list[d][i];
 			individual *indiv2 = &(model->population[idx2]);
 			indiv2->last_novid_alert[d+dist] = model->time;
+			if (indiv2->idx == 8752) {
+				printf("\nNOVID alert %ld -> %ld, time = %d\n\n", indiv->idx, indiv2->idx, model->time);
+			}
+			intervention_quarantine_until( model, indiv2, indiv, model->time + NOVID_CAUTION_DAYS, TRUE, index_token, model->time, 1 );
 		}
 	}
 }
