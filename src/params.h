@@ -201,6 +201,13 @@ typedef struct{
 	// maximum number of strains allowed
 	int max_n_strains;
 
+	int soft_quarantine_on;	// Replace quarantine with soft quarantine: individuals interact with the same people, but transmission rate is lowered
+	int novid_quarantine_length; // How long NOVID users quarantine, starting from the time they were traced
+	double novid_phone_fraction; // Multiplier applied to app_users_fraction (all age groups)
+	double app_phone_fraction; // Multiplier applied to app_users_fraction (all age groups)
+
+	double novid_soft_multiplier[MAX_NOVID_DIST+1]; // Soft quarantine multiplier for NOVID users notified of nearby positive cases
+
 } parameters;
 
 /************************************************************************/

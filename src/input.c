@@ -472,37 +472,66 @@ void read_param_file( parameters *params)
 
 	check = fscanf(parameter_file, " %i ,", &(params->manual_trace_on));
 	if( check < 1){ print_exit("Failed to read parameter manual_trace_on\n"); };
+
 	check = fscanf(parameter_file, " %i ,", &(params->manual_trace_time_on));
 	if( check < 1){ print_exit("Failed to read parameter manual_trace_time_on\n"); };
+
 	check = fscanf(parameter_file, " %i ,", &(params->manual_trace_on_hospitalization));
 	if( check < 1){ print_exit("Failed to read parameter manual_trace_on_hospitalization\n"); };
+
 	check = fscanf(parameter_file, " %i ,", &(params->manual_trace_on_positive));
 	if( check < 1){ print_exit("Failed to read parameter manual_trace_on_positive\n"); };
+
 	check = fscanf(parameter_file, " %i ,", &(params->manual_trace_delay));
 	if( check < 1){ print_exit("Failed to read parameter manual_trace_delay\n"); };
+
 	check = fscanf(parameter_file, " %i ,", &(params->manual_trace_exclude_app_users));
 	if( check < 1){ print_exit("Failed to read parameter manual_trace_exclude_app_users\n"); };
+
 	check = fscanf(parameter_file, " %i ,", &(params->manual_trace_n_workers));
 	if( check < 1){ print_exit("Failed to read parameter manual_trace_n_workers\n"); };
+
 	check = fscanf(parameter_file, " %i ,", &(params->manual_trace_interviews_per_worker_day));
 	if( check < 1){ print_exit("Failed to read parameter manual_trace_interviews_per_worker_day\n"); };
+
 	check = fscanf(parameter_file, " %i ,", &(params->manual_trace_notifications_per_worker_day));
 	if( check < 1){ print_exit("Failed to read parameter manual_trace_notifications_per_worker_day\n"); };
+
 	check = fscanf(parameter_file, " %lf ,", &(params->manual_traceable_fraction[HOUSEHOLD]));
 	if( check < 1){ print_exit("Failed to read parameter manual_traceable_fraction_household\n"); };
+
 	check = fscanf(parameter_file, " %lf ,", &(params->manual_traceable_fraction[OCCUPATION]));
 	if( check < 1){ print_exit("Failed to read parameter manual_traceable_fraction_occupation\n"); };
+
 	check = fscanf(parameter_file, " %lf ,", &(params->manual_traceable_fraction[RANDOM]));
 	if( check < 1){ print_exit("Failed to read parameter manual_traceable_fraction_random\n"); };
 
+	check = fscanf(parameter_file, " %i ,", &(params->relative_susceptibility_by_interaction));
 	if( check < 1){ print_exit("Failed to read parameter relative_susceptibility_by_interaction\n"); };
-		check = fscanf(parameter_file, " %i ,", &(params->relative_susceptibility_by_interaction));
 
+	check = fscanf(parameter_file, " %i ,", &(params->rebuild_networks));
 	if( check < 1){ print_exit("Failed to read parameter rebuild_networks\n"); };
-		check = fscanf(parameter_file, " %i ,", &(params->rebuild_networks));
 
+	check = fscanf(parameter_file, " %i ,", &(params->max_n_strains));
 	if( check < 1){ print_exit("Failed to read parameter max_n_strains\n"); };
-		check = fscanf(parameter_file, " %i ,", &(params->max_n_strains));
+
+	check = fscanf(parameter_file, " %i ,", &(params->soft_quarantine_on));
+	if( check < 1){ print_exit("Failed to read parameter soft_quarantine_on\n"); };
+
+	check = fscanf(parameter_file, " %i ,", &(params->novid_quarantine_length));
+	if( check < 1){ print_exit("Failed to read parameter novid_quarantine_length\n"); };
+
+	check = fscanf(parameter_file, " %lf ,", &(params->novid_phone_fraction));
+	if( check < 1){ print_exit("Failed to read parameter novid_phone_fraction\n"); };
+
+	check = fscanf(parameter_file, " %lf ,", &(params->app_phone_fraction));
+	if( check < 1){ print_exit("Failed to read parameter app_phone_fraction\n"); };
+
+	for (i = 0; i < MAX_NOVID_DIST; i++){
+		check = fscanf(parameter_file, " %lf ,", &(params->novid_soft_multiplier[i]));
+		if( check < 1){ print_exit("Failed to read parameter novid_soft_multiplier)\n"); };
+	}
+	params->novid_soft_multiplier[MAX_NOVID_DIST] = 1;
 
 	fclose(parameter_file);
 }

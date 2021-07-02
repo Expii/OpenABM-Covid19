@@ -164,11 +164,6 @@ void set_up_infectious_curves( model *model )
 	};
 }
 
-//float caution_mult[5] = { 0.125, 0.125, 0.25, 0.5, 1.0 };
-//float caution_mult[5] = { 0.125, 0.125, 1.0, 1.0, 1.0 };
-float caution_mult[5] = { 0.0, 0.0, 1.0, 1.0, 1.0 };
-//float caution_mult[5] = { 1.0, 1.0, 1.0, 1.0, 1.0 };
-
 /*****************************************************************************************
 *  Name:		transmit_virus_by_type
 *  Description: Transmits virus over the interaction network for a type of
@@ -216,7 +211,7 @@ void transmit_virus_by_type(
 					if( !rebuild_networks )
 					{
 						if( infector->house_no != interaction->individual->house_no &&
-							( infector->quarantined || interaction->individual->quarantined ) && !IGNORE_QUARANTINE)
+							( infector->quarantined || interaction->individual->quarantined ) && !model->params->soft_quarantine_on )
 						{
 							interaction = interaction->next;
 							continue;
@@ -230,9 +225,9 @@ void transmit_virus_by_type(
 							continue;
 						}
 
-						short caution_level = min(get_caution_level(infector, model->time), get_caution_level(interaction->individual, model->time));
+						short caution_level = min(get_caution_level(model, infector), get_caution_level(model, interaction->individual));
 
-						hazard_rate   = list->infectious_curve[interaction->type][ t_infect - 1 ] * infector_mult * caution_mult[caution_level];
+						hazard_rate   = list->infectious_curve[interaction->type][ t_infect - 1 ] * infector_mult * model->params->novid_soft_multiplier[caution_level];
 						interaction->individual->hazard[ strain_idx ] -= hazard_rate;
 
 						if( interaction->individual->hazard[ strain_idx ] < 0 )
@@ -261,7 +256,7 @@ void transmit_virus_by_type(
 ******************************************************************************************/
 void transmit_virus( model *model )
 {
-	printf("Start transmit virus\n");
+	//printf("Start transmit virus\n");
 	transmit_virus_by_type( model, PRESYMPTOMATIC );
 	transmit_virus_by_type( model, PRESYMPTOMATIC_MILD );
 	transmit_virus_by_type( model, SYMPTOMATIC );
@@ -270,7 +265,7 @@ void transmit_virus( model *model )
 	transmit_virus_by_type( model, HOSPITALISED );
 	transmit_virus_by_type( model, CRITICAL );
 	transmit_virus_by_type( model, HOSPITALISED_RECOVERING );
-	printf("End transmit virus\n");
+	//printf("End transmit virus\n");
 }
 
 /*****************************************************************************************
@@ -455,7 +450,7 @@ void transition_to_hospitalised( model *model, individual *indiv )
 			transition_one_disese_event( model, indiv, HOSPITALISED, RECOVERED, HOSPITALISED_RECOVERED );
 	}
 
-	if( indiv->quarantined && !IGNORE_QUARANTINE)
+	if( indiv->quarantined && !model->params->soft_quarantine_on)
 		intervention_quarantine_release( model, indiv );
 
 	intervention_on_hospitalised( model, indiv );

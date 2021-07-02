@@ -214,3 +214,11 @@
 | `relative_susceptibility_by_interaction` | 1 | - | Type of relative susceptibility by age group (1 = per interaction; 0 = per day) | - |
 | `rebuild_networks` | 1 | - | Should net works be rebuilt every time step or just on parameter changes | - |
 | `max_n_strains` | 1 | - | Maximum number of stains allowed (note memory hit by allowing more than one) | - |
+| `soft_quarantine_on` | 0 | - | Replace quarantine with soft quarantine: individuals interact with the same people, but transmission rate is lowered (0=no, 1=yes) | - |
+| `novid_quarantine_length` | 7 | - | Maximum number of days for individuals traced by NOVID | - |
+| `novid_phone_fraction` | 0 | - | Fraction of smartphone users who have NOVID installed | - |
+| `app_phone_fraction` | 1 | - | Fraction of smartphone users who have the contact-tracing app installed | - |
+| `novid_soft_multiplier_1` | 0.125 | - | Soft quarantine multiplier for NOVID users notified of a positive case at distance 0 | - |
+| `novid_soft_multiplier_2` | 0.125 | - | Soft quarantine multiplier for NOVID users notified of a positive case at distance 1 | - |
+| `novid_soft_multiplier_3` | 0.25 | - | Soft quarantine multiplier for NOVID users notified of a positive case at distance 2 | - |
+| `novid_soft_multiplier_4` | 0.5 | - | Soft quarantine multiplier for NOVID users notified of a positive case at distance 3 | - |

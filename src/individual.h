@@ -148,7 +148,7 @@ void set_immune( individual*, short, short, short );
 void wane_immunity( individual*, parameters*, short );
 void set_vaccine_status( individual*, parameters*, short, short, short, short );
 void update_random_interactions( individual*, parameters* );
-short get_caution_level( individual*, int );
+short get_caution_level( model *, individual* );
 int count_infection_events( individual * );
 void destroy_individual( individual* );
 void print_individual( model *, long );

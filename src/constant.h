@@ -238,11 +238,7 @@ enum IMMUNE_TYPES{
 #define NO_IMMUNITY -1
 #define ALL_STRAINS -1
 
-#define CT_APP_ADOPTION 0.0
-#define NOVID_APP_ADOPTION 0.0
-#define IGNORE_QUARANTINE 1
-#define NOVID_CAUTION_DAYS 9
-#define NOVID_ON 1
+#define MAX_NOVID_DIST 4
 
 extern gsl_rng * rng;
 

@@ -270,7 +270,7 @@ void update_random_interactions( individual *indiv, parameters* params )
 	double n = indiv->base_random_interactions;
 	int lockdown;
 
-	if( !indiv->quarantined || IGNORE_QUARANTINE)
+	if( !indiv->quarantined || params->soft_quarantine_on )
 	{
 		lockdown = params->lockdown_on;
 		if( indiv->age_type == AGE_TYPE_ELDERLY )
@@ -529,23 +529,25 @@ void set_discharged( individual *indiv, parameters* params, int time )
 *  Description: updates and returns the caution level of a person at a specific time
 *  Returns:		the caution level
 ******************************************************************************************/
-short get_caution_level( individual *indiv, int time )
+short get_caution_level( model *model, individual *indiv )
 {
-	if (!indiv->novid_user)
+	if (!indiv->novid_user || !indiv->quarantined)
 		return 4;
-	//if (indiv->caution_level_time == time)
-		//return indiv->caution_level;
+	int time = model->time;
+	if (indiv->caution_level_time == time)
+		return indiv->caution_level;
 	short level = 4;
 	for (short i = 3; i >= 0; i--) {
-		if (indiv->last_novid_alert[i] >= time - NOVID_CAUTION_DAYS) // TODO: check for off by one error
+		if (indiv->last_novid_alert[i] >= time - model->params->novid_quarantine_length) // TODO: check for off by one error
 			level = i;
 	}
 	indiv->caution_level = level;
 	indiv->caution_level_time = time;
+	/*
 	if (!indiv->quarantined && level != 4) {
 		printf("=============================== ERROR! indiv %ld has caution level %d, should be quarantined at time t = %d\n", indiv->idx, level, time);
 		level = 4;
-	}
+	}*/
 	return level;
 }
 

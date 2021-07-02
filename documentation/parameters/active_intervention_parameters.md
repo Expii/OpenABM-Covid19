@@ -43,3 +43,11 @@
 | `app_users_fraction_60_69` | 0.7 | - | Maximum fraction of the population with smartphones aged 60-69 | OFCOM 55+ year olds |
 | `app_users_fraction_70_79` | 0.48 | - | Maximum fraction of the population with smartphones aged 70-79 | OFCOM 55+ year olds |
 | `app_users_fraction_80` | 0.32 | - | Maximum fraction of the population with smartphones aged 80+ | OFCOM 55+ year olds |
+| `soft_quarantine_on` | 0 | - | Replace quarantine with soft quarantine: individuals interact with the same people, but transmission rate is lowered (0=no, 1=yes) | - |
+| `novid_quarantine_length` | 7 | - | Maximum number of days for individuals traced by NOVID | - |
+| `novid_phone_fraction` | 0 | - | Fraction of smartphone users who have NOVID installed | - |
+| `app_phone_fraction` | 1 | - | Fraction of smartphone users who have the contact-tracing app installed | - |
+| `novid_soft_multiplier_1` | 0.125 | - | Soft quarantine multiplier for NOVID users notified of a positive case at distance 0 | - |
+| `novid_soft_multiplier_2` | 0.125 | - | Soft quarantine multiplier for NOVID users notified of a positive case at distance 1 | - |
+| `novid_soft_multiplier_3` | 0.25 | - | Soft quarantine multiplier for NOVID users notified of a positive case at distance 2 | - |
+| `novid_soft_multiplier_4` | 0.5 | - | Soft quarantine multiplier for NOVID users notified of a positive case at distance 3 | - |

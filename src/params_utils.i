@@ -882,7 +882,6 @@ int get_param_testing_symptoms_time_off(parameters *params)
     return params->lockdown_time_off;
 }
 
-
 /*****************************************************************************************
 *  Name:        get_param_location_death_icu
 *  Description: Gets the value of a parameter
@@ -894,6 +893,52 @@ double get_param_location_death_icu(parameters *params, int idx)
     return params->location_death_icu[idx];
 }
 
+/*****************************************************************************************
+*  Name:        get_param_soft_quarantine_on
+*  Description: Gets the value of a parameter
+******************************************************************************************/
+int get_param_soft_quarantine_on(parameters *params)
+{
+    return params->soft_quarantine_on;
+}
+
+/*****************************************************************************************
+*  Name:        get_param_novid_quarantine_length
+*  Description: Gets the value of a parameter
+******************************************************************************************/
+int get_param_novid_quarantine_length(parameters *params)
+{
+    return params->novid_quarantine_length;
+}
+
+/*****************************************************************************************
+*  Name:        get_param_novid_phone_fraction
+*  Description: Gets the value of a parameter
+******************************************************************************************/
+double get_param_novid_phone_fraction(parameters *params)
+{
+    return params->novid_phone_fraction;
+}
+
+/*****************************************************************************************
+*  Name:        get_param_app_phone_fraction
+*  Description: Gets the value of a parameter
+******************************************************************************************/
+double get_param_app_phone_fraction(parameters *params)
+{
+    return params->novid_phone_fraction;
+}
+
+/*****************************************************************************************
+*  Name:        get_param_novid_soft_multiplier
+*  Description: Gets the value of a parameter
+******************************************************************************************/
+double get_param_novid_soft_multiplier(parameters *params, int idx)
+{
+    if (idx >= MAX_NOVID_DIST+1) return ERROR;
+
+    return params->novid_soft_multiplier[idx];
+}
 
 /*****************************************************************************************
 *  Name:        set_param_rng_seed
@@ -1833,6 +1878,57 @@ double set_param_location_death_icu(parameters *params, double value, int idx)
     return TRUE;
 }
 
+/*****************************************************************************************
+*  Name:        set_param_soft_quarantine_on
+*  Description: Sets the value of parameter
+******************************************************************************************/
+int set_param_soft_quarantine_on(parameters *params, int value)
+{
+    params->soft_quarantine_on = value;
+    return TRUE;
+}
+
+/*****************************************************************************************
+*  Name:        set_param_novid_quarantine_length
+*  Description: Sets the value of parameter
+******************************************************************************************/
+int set_param_novid_quarantine_length(parameters *params, int value)
+{
+    params->novid_quarantine_length = value;
+    return TRUE;
+}
+
+/*****************************************************************************************
+*  Name:        set_param_novid_phone_fraction
+*  Description: Sets the value of parameter
+******************************************************************************************/
+int set_param_novid_phone_fraction(parameters *params, double value)
+{
+    params->novid_phone_fraction = value;
+    return TRUE;
+}
+
+/*****************************************************************************************
+*  Name:        set_param_app_phone_fraction
+*  Description: Sets the value of parameter
+******************************************************************************************/
+int set_param_app_phone_fraction(parameters *params, double value)
+{
+    params->app_phone_fraction = value;
+    return TRUE;
+}
+
+/*****************************************************************************************
+*  Name:        set_param_novid_soft_multiplier
+*  Description: Gets the value of a parameter
+******************************************************************************************/
+int set_param_novid_soft_multiplier(parameters *params, double value, int idx)
+{
+    if (idx >= MAX_NOVID_DIST+1) return ERROR;
+    params->novid_soft_multiplier[idx] = value;
+    return TRUE;
+}
+
 
 void add_household_to_ref_households(parameters *params, int idx, int i_0_9, int i_10_19, int i_20_29, int i_30_39, int i_40_49, int i_50_59, int i_60_69, int i_70_79, int i_80){
     // if(idx >= params->N_REFERENCE_HOUSEHOLDS) return FALSE;
@@ -2038,6 +2134,17 @@ void get_param_array_app_users_fraction(parameters *params, double *value)
     }
 }
 
+/*****************************************************************************************
+*  Name:        get_param_array_novid_soft_multiplier
+*  Description: Gets the value of double parameter
+******************************************************************************************/
+void get_param_array_novid_soft_multiplier(parameters *params, double *value)
+{
+    for (int idx = 0; idx < MAX_NOVID_DIST+1; idx++) {
+        value[idx] = params->novid_soft_multiplier[idx];
+    }
+}
+
 
 /*****************************************************************************************
 *  Name:        set_param_array_mean_random_interactions
@@ -2214,6 +2321,18 @@ void set_param_array_location_death_icu(parameters *params, double *value)
         params->location_death_icu[idx] = value[idx];
     }
 }
+
+/*****************************************************************************************
+*  Name:        set_param_array_novid_soft_multiplier
+*  Description: Sets the value of parameter
+******************************************************************************************/
+void set_param_array_novid_soft_multiplier(parameters *params, double *value)
+{
+    for (int idx = 0; idx < MAX_NOVID_DIST+1; idx++) {
+        params->novid_soft_multiplier[idx] = value[idx];
+    }
+}
+
 %}
 
 %extend parameters{

@@ -212,4 +212,12 @@ manual_traceable_fraction_random,0.05,,The fraction of random contacts that can 
 relative_susceptibility_by_interaction,1,,Type of relative susceptibility by age group (1 = per interaction; 0 = per day),,
 rebuild_networks,1,,Should net works be rebuilt every time step or just on parameter changes,,
 max_n_strains,1,,Maximum number of stains allowed (note memory hit by allowing more than one),,
-
+soft_quarantine_on,0,,"Replace quarantine with soft quarantine: individuals interact with the same people, but transmission rate is lowered (0=no, 1=yes)",,Active intervention parameters
+novid_quarantine_length,7,,Maximum number of days for individuals traced by NOVID,,Active intervention parameters
+novid_phone_fraction,0,,Fraction of smartphone users who have NOVID installed,,Active intervention parameters
+app_phone_fraction,1,,Fraction of smartphone users who have the contact-tracing app installed,,Active intervention parameters
+novid_soft_multiplier_1,0.125,,Soft quarantine multiplier for NOVID users notified of a positive case at distance 0,,Active intervention parameters
+novid_soft_multiplier_2,0.125,,Soft quarantine multiplier for NOVID users notified of a positive case at distance 1,,Active intervention parameters
+novid_soft_multiplier_3,0.25,,Soft quarantine multiplier for NOVID users notified of a positive case at distance 2,,Active intervention parameters
+novid_soft_multiplier_4,0.5,,Soft quarantine multiplier for NOVID users notified of a positive case at distance 3,,Active intervention parameters
+novid_report_traced,0,,"Allow NOVID users to report that they have been traced by another contact-tracing app (0=no, 1=yes)",,Active intervention parameters

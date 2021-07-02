@@ -158,7 +158,7 @@ SEXP R_get_transmissions ( SEXP R_c_model )
   int *infector_network = calloc( n_trans, sizeof(int) );
   int *infector_network_id = calloc( n_trans, sizeof(int) );
   int *generation_time = calloc( n_trans, sizeof(int) );
-  long *ID_source = calloc( n_trans, sizeof(long) );
+  // long *ID_source = calloc( n_trans, sizeof(long) );
   int *age_group_source = calloc( n_trans, sizeof(int) );
   long *house_no_source = calloc( n_trans, sizeof(long) );
   int *occupation_network_source = calloc( n_trans, sizeof(int) );
