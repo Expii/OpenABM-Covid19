@@ -423,8 +423,8 @@ void transition_to_symptomatic_mild( model *model, individual *indiv )
 ******************************************************************************************/
 void transition_to_hospitalised( model *model, individual *indiv )
 {
-	if (indiv->idx == 9586)
-		printf("t_t_hospitalized %ld\n", indiv->idx);
+	//if (indiv->idx == 9586)
+		//printf("t_t_hospitalized %ld\n", indiv->idx);
 
 	set_hospitalised( indiv, model->params, model->time );
 
