@@ -53,7 +53,6 @@ struct individual{
 
 	short app_user;
 
-	short novid_user;
 	long **novid_adj_list;
 	long *novid_n_adj;
 	short *last_novid_alert;

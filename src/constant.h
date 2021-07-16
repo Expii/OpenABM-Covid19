@@ -239,6 +239,7 @@ enum IMMUNE_TYPES{
 #define ALL_STRAINS -1
 
 #define MAX_NOVID_DIST 4
+#define DEBUG 0
 
 extern gsl_rng * rng;
 

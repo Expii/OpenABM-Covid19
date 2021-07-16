@@ -51,7 +51,6 @@ struct vaccine{
 
 void set_up_transition_times_intervention( model* );
 void set_up_app_users( model* );
-void set_up_novid_users( model* );
 void set_up_risk_scores( model* );
 void destroy_risk_scores( model* );
 void update_intervention_policy( model*, int );

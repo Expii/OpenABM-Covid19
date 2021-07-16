@@ -518,20 +518,23 @@ void read_param_file( parameters *params)
 	check = fscanf(parameter_file, " %i ,", &(params->soft_quarantine_on));
 	if( check < 1){ print_exit("Failed to read parameter soft_quarantine_on\n"); };
 
+	check = fscanf(parameter_file, " %i ,", &(params->soft_quarantine_household));
+	if( check < 1){ print_exit("Failed to read parameter soft_quarantine_household\n"); };
+
+	check = fscanf(parameter_file, " %i ,", &(params->novid_on));
+	if( check < 1){ print_exit("Failed to read parameter novid_on\n"); };
+
 	check = fscanf(parameter_file, " %i ,", &(params->novid_quarantine_length));
 	if( check < 1){ print_exit("Failed to read parameter novid_quarantine_length\n"); };
-
-	check = fscanf(parameter_file, " %lf ,", &(params->novid_phone_fraction));
-	if( check < 1){ print_exit("Failed to read parameter novid_phone_fraction\n"); };
-
-	check = fscanf(parameter_file, " %lf ,", &(params->app_phone_fraction));
-	if( check < 1){ print_exit("Failed to read parameter app_phone_fraction\n"); };
 
 	for (i = 0; i < MAX_NOVID_DIST; i++){
 		check = fscanf(parameter_file, " %lf ,", &(params->novid_soft_multiplier[i]));
 		if( check < 1){ print_exit("Failed to read parameter novid_soft_multiplier)\n"); };
 	}
 	params->novid_soft_multiplier[MAX_NOVID_DIST] = 1;
+
+	check = fscanf(parameter_file, " %lf ,", &(params->novid_report_manual_traced));
+	if( check < 1){ print_exit("Failed to read parameter novid_report_manual_traced\n"); };
 
 	fclose(parameter_file);
 }
@@ -932,8 +935,8 @@ void read_household_demographics_file( parameters *params)
 	fclose( hh_file );
 	params->N_REFERENCE_HOUSEHOLDS = fileSize - 1;
 
-	if( params->N_REFERENCE_HOUSEHOLDS < 100 )
-		print_exit( "Reference household panel too small (<100) - will not be able to assign household structure");
+	//if( params->N_REFERENCE_HOUSEHOLDS < 100 )
+		//print_exit( "Reference household panel too small (<100) - will not be able to assign household structure");
 
 	// allocate memory on the params object
 	set_up_reference_household_memory(params);
@@ -952,6 +955,8 @@ void read_household_demographics_file( parameters *params)
 		}
 	}
 	fclose(hh_file);
+	printf("file = %s\n", params->input_household_file);
+	printf("N_REF_HOUSE = %ld\n", params->N_REFERENCE_HOUSEHOLDS);
 }
 
 

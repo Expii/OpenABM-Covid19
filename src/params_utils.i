@@ -903,30 +903,30 @@ int get_param_soft_quarantine_on(parameters *params)
 }
 
 /*****************************************************************************************
+*  Name:        get_param_soft_quarantine_household
+*  Description: Gets the value of a parameter
+******************************************************************************************/
+int get_param_soft_quarantine_household(parameters *params)
+{
+    return params->soft_quarantine_household;
+}
+
+/*****************************************************************************************
+*  Name:        get_param_novid_on
+*  Description: Gets the value of a parameter
+******************************************************************************************/
+int get_param_novid_on(parameters *params)
+{
+    return params->novid_on;
+}
+
+/*****************************************************************************************
 *  Name:        get_param_novid_quarantine_length
 *  Description: Gets the value of a parameter
 ******************************************************************************************/
 int get_param_novid_quarantine_length(parameters *params)
 {
     return params->novid_quarantine_length;
-}
-
-/*****************************************************************************************
-*  Name:        get_param_novid_phone_fraction
-*  Description: Gets the value of a parameter
-******************************************************************************************/
-double get_param_novid_phone_fraction(parameters *params)
-{
-    return params->novid_phone_fraction;
-}
-
-/*****************************************************************************************
-*  Name:        get_param_app_phone_fraction
-*  Description: Gets the value of a parameter
-******************************************************************************************/
-double get_param_app_phone_fraction(parameters *params)
-{
-    return params->novid_phone_fraction;
 }
 
 /*****************************************************************************************
@@ -938,6 +938,15 @@ double get_param_novid_soft_multiplier(parameters *params, int idx)
     if (idx >= MAX_NOVID_DIST+1) return ERROR;
 
     return params->novid_soft_multiplier[idx];
+}
+
+/*****************************************************************************************
+*  Name:        get_param_novid_report_manual_traced
+*  Description: Gets the value of a parameter
+******************************************************************************************/
+double get_param_novid_report_manual_traced(parameters *params)
+{
+    return params->novid_report_manual_traced;
 }
 
 /*****************************************************************************************
@@ -1889,32 +1898,32 @@ int set_param_soft_quarantine_on(parameters *params, int value)
 }
 
 /*****************************************************************************************
+*  Name:        set_param_soft_quarantine_household
+*  Description: Sets the value of parameter
+******************************************************************************************/
+int set_param_soft_quarantine_household(parameters *params, int value)
+{
+    params->soft_quarantine_household = value;
+    return TRUE;
+}
+
+/*****************************************************************************************
+*  Name:        set_param_novid_on
+*  Description: Sets the value of parameter
+******************************************************************************************/
+int set_param_novid_on(parameters *params, int value)
+{
+    params->novid_on = value;
+    return TRUE;
+}
+
+/*****************************************************************************************
 *  Name:        set_param_novid_quarantine_length
 *  Description: Sets the value of parameter
 ******************************************************************************************/
 int set_param_novid_quarantine_length(parameters *params, int value)
 {
     params->novid_quarantine_length = value;
-    return TRUE;
-}
-
-/*****************************************************************************************
-*  Name:        set_param_novid_phone_fraction
-*  Description: Sets the value of parameter
-******************************************************************************************/
-int set_param_novid_phone_fraction(parameters *params, double value)
-{
-    params->novid_phone_fraction = value;
-    return TRUE;
-}
-
-/*****************************************************************************************
-*  Name:        set_param_app_phone_fraction
-*  Description: Sets the value of parameter
-******************************************************************************************/
-int set_param_app_phone_fraction(parameters *params, double value)
-{
-    params->app_phone_fraction = value;
     return TRUE;
 }
 
@@ -1926,6 +1935,16 @@ int set_param_novid_soft_multiplier(parameters *params, double value, int idx)
 {
     if (idx >= MAX_NOVID_DIST+1) return ERROR;
     params->novid_soft_multiplier[idx] = value;
+    return TRUE;
+}
+
+/*****************************************************************************************
+*  Name:        set_param_novid_report_manual_traced
+*  Description: Sets the value of parameter
+******************************************************************************************/
+int set_param_novid_report_manual_traced(parameters *params, double value)
+{
+    params->novid_report_manual_traced = value;
     return TRUE;
 }
 

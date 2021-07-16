@@ -1218,6 +1218,7 @@ class TestClass(object):
         params.set_param("n_total", n_total)
         params.set_param("n_seed_infection", n_seed_infection)
         params.set_param("end_time", end_time)
+        params.set_param("rng_seed", 2)
         
         params.write_params(constant.TEST_DATA_FILE)
         

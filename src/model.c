@@ -82,8 +82,8 @@ model* new_model( parameters *params )
 	set_up_app_users( model_ptr );
 	set_up_trace_tokens( model_ptr, 0.01 );
 	set_up_risk_scores( model_ptr );
-	set_up_novid_users( model_ptr );
-	set_up_novid_network( model_ptr );
+	if (params->novid_on)
+		set_up_novid_network( model_ptr );
 
 	model_ptr->n_quarantine_days = 0;
 
@@ -314,7 +314,7 @@ void set_up_novid_network( model *model )
 		for (long i = 0; i < net->n_edges; i++) {
 			long a = net->edges[i].id1;
 			long b = net->edges[i].id2;
-			if (indivs[a].novid_user && indivs[b].novid_user) {
+			if (indivs[a].app_user && indivs[b].app_user) {
 				set_insert(adj_set[a][1], b);
 				set_insert(adj_set[b][1], a);
 				set_insert(all[a], b);
@@ -324,8 +324,8 @@ void set_up_novid_network( model *model )
 	}
 
 	for (long i = 0; i < n_total; i++) {
-		indivs[i].novid_n_adj[0] = indivs[i].novid_user;
-		indivs[i].novid_adj_list[0] = calloc(indivs[i].novid_user, sizeof(long));
+		indivs[i].novid_n_adj[0] = indivs[i].app_user;
+		indivs[i].novid_adj_list[0] = calloc(indivs[i].app_user, sizeof(long));
 		indivs[i].novid_adj_list[0][0] = i;
 		indivs[i].novid_n_adj[1] = set_size(adj_set[i][1]);
 		indivs[i].novid_adj_list[1] = set_to_list(adj_set[i][1]);
@@ -418,9 +418,10 @@ void set_up_occupation_network( model *model )
     {
         n_people = 0;
         people = calloc( params->n_total, sizeof(long) );
-        for ( idx = 0; idx < params->n_total; idx++ )
-            if (model->population[idx].occupation_network == network)
-                people[n_people++] = idx;
+		for ( idx = 0; idx < params->n_total; idx++ )
+			if (model->population[idx].occupation_network == network)
+				people[n_people++] = idx;
+		printf("network = %d, n_people = %ld\n", network, n_people);
 
         model->occupation_network[network] = create_network( n_people, OCCUPATION );
         model->occupation_network[network]->skip_hospitalised = TRUE;
@@ -1531,6 +1532,8 @@ void return_interactions( model *model )
 int one_time_step( model *model )
 {
 	(model->time)++;
+	if (DEBUG)
+		printf("Starting day t = %d\n",  model->time);
 	reset_counters( model );
 	update_intervention_policy( model, model->time );
 
@@ -1545,10 +1548,10 @@ int one_time_step( model *model )
 		build_daily_network( model );
 		model->rebuild_networks = model->params->rebuild_networks;
 	}
-	individual *indiv = &(model->population[8752]);
-	//printf("\nSTART t = %d, nov = %d, q = %d, cl = %d, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->novid_user, indiv->quarantined, get_caution_level(model, indiv), is_in_hospital(indiv), indiv->last_novid_alert[0], indiv->last_novid_alert[1], indiv->last_novid_alert[2], indiv->last_novid_alert[3]);
+	individual *indiv = &(model->population[4337]);
+	if (DEBUG) printf("\nSTART t = %d, nov = %d, q = %d, cl = %d, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->app_user, indiv->quarantined, get_caution_level(model, indiv), is_in_hospital(indiv), indiv->last_novid_alert[0], indiv->last_novid_alert[1], indiv->last_novid_alert[2], indiv->last_novid_alert[3]);
 	transmit_virus( model );
-	//printf("MID t = %d, nov = %d, q = %d, cl = %d, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->novid_user, indiv->quarantined, get_caution_level(model, indiv), is_in_hospital(indiv), indiv->last_novid_alert[0], indiv->last_novid_alert[1], indiv->last_novid_alert[2], indiv->last_novid_alert[3]);
+	if (DEBUG) printf("MID t = %d, nov = %d, q = %d, cl = %d, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->app_user, indiv->quarantined, get_caution_level(model, indiv), is_in_hospital(indiv), indiv->last_novid_alert[0], indiv->last_novid_alert[1], indiv->last_novid_alert[2], indiv->last_novid_alert[3]);
 
 	transition_events( model, SYMPTOMATIC,       	   &transition_to_symptomatic,      		FALSE );
 	transition_events( model, SYMPTOMATIC_MILD,  	   &transition_to_symptomatic_mild, 		FALSE );
@@ -1597,7 +1600,7 @@ int one_time_step( model *model )
 		intervention_smart_release( model );
 
 	model->n_quarantine_days += model->event_lists[QUARANTINED].n_current;
-	//printf("END t = %d, nov = %d, q = %d, cl = ?, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->novid_user, indiv->quarantined, is_in_hospital(indiv), indiv->last_novid_alert[0], indiv->last_novid_alert[1], indiv->last_novid_alert[2], indiv->last_novid_alert[3]);
+	if (DEBUG) printf("END t = %d, nov = %d, q = %d, cl = ?, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->app_user, indiv->quarantined, is_in_hospital(indiv), indiv->last_novid_alert[0], indiv->last_novid_alert[1], indiv->last_novid_alert[2], indiv->last_novid_alert[3]);
 
 	return 1;
 }

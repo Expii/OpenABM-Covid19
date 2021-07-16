@@ -121,6 +121,8 @@ void set_up_infectious_curves( model *model )
 	infectious_rate = params->infectious_rate;
 	if( params->relative_susceptibility_by_interaction )
 	{
+		//printf("inf_rate_orig = %lf\n", infectious_rate);
+		//printf("mean_interactious = %lf\n", model->mean_interactions);
 		if( model->mean_interactions > 0 )
 			infectious_rate /= model->mean_interactions;
 		for( group = 0; group < N_AGE_GROUPS; group++ )
@@ -137,6 +139,7 @@ void set_up_infectious_curves( model *model )
 	for( type = 0; type < N_INTERACTION_TYPES; type++ )
 	{
 		type_factor = params->relative_transmission_used[type];
+		//printf("tf = %lf\n", type_factor);
 
 		gamma_rate_curve( model->event_lists[PRESYMPTOMATIC].infectious_curve[type], MAX_INFECTIOUS_PERIOD, params->mean_infectious_period,
 						  params->sd_infectious_period, infectious_rate * type_factor );
@@ -162,6 +165,20 @@ void set_up_infectious_curves( model *model )
 		gamma_rate_curve( model->event_lists[CRITICAL].infectious_curve[type], MAX_INFECTIOUS_PERIOD, params->mean_infectious_period,
 						  params->sd_infectious_period, infectious_rate * type_factor );
 	};
+	double temp[MAX_INFECTIOUS_PERIOD];
+	gamma_rate_curve( temp, MAX_INFECTIOUS_PERIOD, params->mean_infectious_period, params->sd_infectious_period, infectious_rate );
+	/*
+	printf("MAX_INFECTIOUS_PERIOD = %d\n", MAX_INFECTIOUS_PERIOD);
+	printf("gamma_rate_curve:");
+	for (int i = 0; i<MAX_INFECTIOUS_PERIOD; i++) {
+		printf("%d: %lf\n", i, temp[i]);
+	}
+	for (int i = 0; i<100; i++) {
+		printf("inv_inc_gamma_p(0.5, %d) = %lf\n", i, inv_incomplete_gamma_p(0.5, i));
+	}
+	*/
+	//printf("mean interactions = %lf\n", model->mean_interactions);
+	//printf("infectious_rate = %lf\n", infectious_rate);
 }
 
 /*****************************************************************************************
@@ -649,6 +666,7 @@ double calculate_R_instanteous( model *model, int time, double percentile )
 		return ERROR;
 
 	return inv_incomplete_gamma_p( percentile, actual_infections ) / expected_infections;
+	//return 1.0 * actual_infections / expected_infections;
 }
 
 /*****************************************************************************************

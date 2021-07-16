@@ -39,7 +39,7 @@ void assign_household_distribution( model *model, demographic_household_table *d
 	// check to see that demo_house has the correct number of people
 	if( demo_house->n_total != model->params->n_total )
 	{
-		printf( "demo_house n_tota = %li", demo_house->n_total);
+		printf( "demo_house n_total = %li", demo_house->n_total);
 		print_exit( "The demographic-household table has a different n_total to the parameters");
 	}
 
@@ -215,9 +215,13 @@ void set_up_allocate_default_work_places( model *model )
 ******************************************************************************************/
 void add_reference_household( double *array, long hdx, int **REFERENCE_HOUSEHOLDS)
 {
+	//printf("adding house: ");
 	int idx;
-	for( idx = 0; idx < N_AGE_GROUPS; idx++ )
+	for( idx = 0; idx < N_AGE_GROUPS; idx++ ) {
 		array[idx] += (double) REFERENCE_HOUSEHOLDS[hdx][idx];
+		//printf("%d, ", REFERENCE_HOUSEHOLDS[hdx][idx]);
+	}
+	//printf("\n");
 }
 
 /*****************************************************************************************
@@ -235,6 +239,7 @@ void add_reference_household( double *array, long hdx, int **REFERENCE_HOUSEHOLD
 ******************************************************************************************/
 void generate_household_distribution( model *model )
 {
+	printf("Start generate_household_distribution\n");
 	int idx, housesize, age;
 	long hdx, n_households, pdx, sample;
 	double error, last_error, acceptance;
@@ -284,6 +289,12 @@ void generate_household_distribution( model *model )
 	{
 		copy_array( population_trial, population_total, N_AGE_GROUPS    );
 		copy_array( household_trial,  household_total,  N_HOUSEHOLD_MAX );
+		/*
+		cout << "pop_trial: ";
+		for (int i = 0; i<N_AGE_GROUPS; i++)
+			cout << population_trial[i] << ", ";
+		cout << endl;
+		*/
 
 		for( idx = 0; idx < SAMPLE_BATCH; idx++ )
 		{
@@ -300,7 +311,7 @@ void generate_household_distribution( model *model )
 
 		// accept better than previous or within the acceptance threshold, then reduce the acceptance threshold
 		// reject if error is worse than the acceptance threshold, then increase the the acceptance threshold
-		if( error < last_error + acceptance )
+		if( error <= last_error + acceptance )
 		{
 			for( idx = 0; idx < SAMPLE_BATCH; idx++ )
 			{
@@ -312,8 +323,9 @@ void generate_household_distribution( model *model )
 			acceptance *= ACCEPTANCE_MULT;
 			last_error  = min( error, last_error );
 		}
-		else
+		else {
 			acceptance *= REJECTION_MULT;
+		}
 	}
 
 	free( population_target );
@@ -364,6 +376,7 @@ void generate_household_distribution( model *model )
 
 	free( households );
 	free( REFERENCE_HOUSEHOLD_SIZE );
+	printf("End generate_household_distribution\n");
 }
 
 /*****************************************************************************************

@@ -31,7 +31,6 @@ void initialize_individual(
 	indiv->status      = SUSCEPTIBLE;
 	indiv->quarantined = FALSE;
 	indiv->app_user	   = FALSE;
-	indiv->novid_user  = FALSE;
 
 	indiv->n_interactions = calloc( params->days_of_interactions, sizeof( short ) );
 	indiv->interactions   = calloc( params->days_of_interactions, sizeof( interaction* ) );
@@ -531,23 +530,33 @@ void set_discharged( individual *indiv, parameters* params, int time )
 ******************************************************************************************/
 short get_caution_level( model *model, individual *indiv )
 {
-	if (!indiv->novid_user || !indiv->quarantined)
-		return 4;
-	int time = model->time;
-	if (indiv->caution_level_time == time)
-		return indiv->caution_level;
+	if (DEBUG) {
+		if (!indiv->app_user)
+			return 4;
+	}
+	else {
+		if (!indiv->app_user || !indiv->quarantined)
+			return 4;
+		if (indiv->caution_level_time == model->time)
+			return indiv->caution_level;
+	}
+
+	//n          = model->household_directory->n_jdx[indiv->house_no];
+	//members    = model->household_directory->val[indiv->house_no];
 	short level = 4;
 	for (short i = 3; i >= 0; i--) {
-		if (indiv->last_novid_alert[i] >= time - model->params->novid_quarantine_length) // TODO: check for off by one error
+		// TODO: check for off by one error
+		if (indiv->last_novid_alert[i] >= model->time - model->params->novid_quarantine_length)
 			level = i;
 	}
 	indiv->caution_level = level;
-	indiv->caution_level_time = time;
-	/*
-	if (!indiv->quarantined && level != 4) {
-		printf("=============================== ERROR! indiv %ld has caution level %d, should be quarantined at time t = %d\n", indiv->idx, level, time);
-		level = 4;
-	}*/
+	indiv->caution_level_time = model->time;
+	if (DEBUG) {
+		if (!indiv->quarantined && level != 4) {
+			printf("=============================== ERROR! indiv %ld has caution level %d, should be quarantined at time t = %d\n", indiv->idx, level, model->time);
+			level = 4;
+		}
+	}
 	return level;
 }
 

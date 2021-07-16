@@ -58,7 +58,7 @@ void set_up_app_users( model *model )
 		if( ( current_users + not_users) == 0 )
 			continue;
 
-		max_user = ceil( ( current_users + not_users ) * fraction[age] * model->params->app_phone_fraction ) - current_users;
+		max_user = ceil( ( current_users + not_users ) * fraction[age] ) - current_users;
 		if( max_user < 0 || max_user > not_users )
 			print_exit( "Bad target app_fraction_users" );
 
@@ -73,49 +73,6 @@ void set_up_app_users( model *model )
 		for( idx = 0; idx < model->params->n_total; idx++ )
 			if( model->population[ idx ].age_group == age && model->population[ idx ].app_user == FALSE )
 				model->population[ idx ].app_user = users[ jdx++ ];
-
-		free( users );
-	}
-}
-
-/*****************************************************************************************
-*  Name:		set_up_novid_users
-*  Description: Set up the proportion of NOVID app users in the population
-******************************************************************************************/
-void set_up_novid_users( model *model )
-{
-	long idx, jdx, age, current_users, not_users, max_user;
-	double *fraction = model->params->app_users_fraction;
-
-	for( age = 0; age < N_AGE_GROUPS; age++ )
-	{
-		current_users = 0;
-		not_users     = 0;
-		for( idx = 0; idx < model->params->n_total; idx++ )
-			if( model->population[ idx ].age_group == age )
-			{
-				current_users += model->population[ idx ].novid_user;
-				not_users     += 1 - model->population[ idx ].novid_user;
-			}
-
-		if( ( current_users + not_users) == 0 )
-			continue;
-
-		max_user = ceil( ( current_users + not_users ) * fraction[age] * model->params->novid_phone_fraction ) - current_users;
-		if( max_user < 0 || max_user > not_users )
-			print_exit( "Bad target novid_fraction_users" );
-
-		int *users = calloc( not_users, sizeof( int ) );
-
-		for( idx = 0; idx < max_user; idx++ )
-			users[ idx ] = 1;
-
-		gsl_ran_shuffle( rng, users, not_users, sizeof( int ) );
-
-		jdx   = 0;
-		for( idx = 0; idx < model->params->n_total; idx++ )
-			if( model->population[ idx ].age_group == age && model->population[ idx ].novid_user == FALSE )
-				model->population[ idx ].novid_user = users[ jdx++ ];
 
 		free( users );
 	}
@@ -986,6 +943,9 @@ void intervention_notify_contacts(
 					{
 						model->manual_trace_notification_quota--;
 						intervention_on_traced( model, contact, model->time - ddx, recursion_level, index_token, risk_scores[ contact->age_group ], trace_type );
+
+						if ( params->novid_on && contact->app_user && gsl_ran_bernoulli( rng, params->novid_report_manual_traced ))
+							intervention_novid_alert( model, contact, 1, index_token );
 					}
 				}
 				inter = inter->next;
@@ -1195,10 +1155,14 @@ void intervention_on_symptoms( model *model, individual *indiv )
 	if( indiv->index_trace_token != NULL )
 		return;
 
-	int quarantine, time_event;
+	int quarantine, time_event, test;
 	parameters *params = model->params;
 
-	quarantine = indiv->quarantined || gsl_ran_bernoulli( rng, params->self_quarantine_fraction );
+	double r_unif = gsl_rng_uniform( rng );
+	// TODO: indivs who are already quarantined (through contact tracing) will react to symptoms early,
+	// instead of reacting to their positive test later
+	quarantine = indiv->quarantined || ( r_unif < params->self_quarantine_fraction );
+	test = params->test_on_symptoms && ( r_unif < params->test_on_traced_fraction );
 
 	trace_token *index_token;
 	if( quarantine )
@@ -1223,7 +1187,7 @@ void intervention_on_symptoms( model *model, individual *indiv )
 			remove_event_from_event_list( model, indiv->index_token_release_event );
 		indiv->index_token_release_event = add_individual_to_event_list( model, TRACE_TOKEN_RELEASE, indiv, model->time + params->quarantine_length_traced_symptoms, NULL );
 	}
-	if( params->test_on_symptoms )
+	if( test )
 		intervention_test_order( model, indiv, model->time + params->test_order_wait );
 }
 
@@ -1296,7 +1260,7 @@ void intervention_on_positive_result( model *model, individual *indiv )
 	)
 		intervention_notify_contacts( model, indiv, 1, index_token, DIGITAL_TRACE );
 
-	if ( indiv->novid_user )
+	if ( params->novid_on && indiv->app_user )
 		intervention_novid_alert( model, indiv, 0, index_token );
 
 	if( params->manual_trace_on &&
@@ -1361,9 +1325,6 @@ void intervention_on_traced(
 		return;
 
 	parameters *params = model->params;
-
-	if ( indiv->novid_user ) // TODO: add probability parameter
-		intervention_novid_alert( model, indiv, 1, index_token );
 
 	if( params->quarantine_on_traced )
 	{
