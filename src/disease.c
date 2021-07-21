@@ -222,7 +222,7 @@ void transmit_virus_by_type(
 				interaction   = infector->interactions[ model->interaction_day_idx ];
 				infector_mult = infector->infectiousness_multiplier * infector->infection_events->strain->transmission_multiplier;
 				strain_idx 	  = infector->infection_events->strain->idx;
-
+				
 				for( jdx = 0; jdx < n_interaction; jdx++ )
 				{
 					if( !rebuild_networks )
@@ -243,12 +243,15 @@ void transmit_virus_by_type(
 						}
 
 						short caution_level = min(get_caution_level(model, infector), get_caution_level(model, interaction->individual));
-
+						
 						hazard_rate   = list->infectious_curve[interaction->type][ t_infect - 1 ] * infector_mult * model->params->novid_soft_multiplier[caution_level];
+						if (model->time < 50)
+							if (DEBUG) printf("t = %d:\t%ld -> %ld attempt, t_infect = %d, prob = %lf\n", model->time, infector->idx, interaction->individual->idx, t_infect, list->infectious_curve[interaction->type][ t_infect - 1 ]);
 						interaction->individual->hazard[ strain_idx ] -= hazard_rate;
 
 						if( interaction->individual->hazard[ strain_idx ] < 0 )
 						{
+							if (DEBUG) printf("t = %d:\t%ld -> %ld infected\n", model->time, infector->idx, interaction->individual->idx);
 							new_infection( model, interaction->individual, infector, interaction->network_id, infector->infection_events->strain );
 							interaction->individual->infection_events->infector_network = interaction->type;
 						}

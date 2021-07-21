@@ -115,8 +115,15 @@ void gamma_draw_list(
 	double sd
 )
 {
-	int idx      = 0;
+	int idx = 0;
 	double a, b;
+
+	if ( sd == 0 )
+	{
+		for ( idx = 0; idx < n; idx++ )
+			list[idx] = mean;
+		return;
+	}
 
 	b = sd * sd / mean;
 	a = mean / b;
@@ -215,14 +222,14 @@ void geometric_max_draw_list(
 *                              mean:   mean of  distribution
 ******************************************************************************************/
 void geometric_draw_list(
-		int *list,
-		int n,
-		double mean
+	int *list,
+	int n,
+	double mean
 )
 {
-		int idx;
-		for( idx = 0; idx < n; idx++ )
-				list[idx] = max( round( gsl_cdf_exponential_Pinv( ( idx + 1.0 )/( n + 1.0 ), mean)), 1 );
+	int idx;
+	for( idx = 0; idx < n; idx++ )
+		list[idx] = max( round( gsl_cdf_exponential_Pinv( ( idx + 1.0 )/( n + 1.0 ), mean)), 1 );
 }
 
 /*****************************************************************************************
@@ -236,17 +243,17 @@ void geometric_draw_list(
 *                              shift:  amount by which the distribution is shifted
 ******************************************************************************************/
 void shifted_geometric_draw_list(
-		int *list,
-		int n,
-		double mean,
-		int shift
+	int *list,
+	int n,
+	double mean,
+	int shift
 )
 {
-		geometric_draw_list( list, n, mean );
+	geometric_draw_list( list, n, mean );
 
-		int idx;
-		for( idx = 0; idx < n; idx++ )
-				list[idx] = shift + list[idx];
+	int idx;
+	for( idx = 0; idx < n; idx++ )
+		list[idx] = shift + list[idx];
 }
 
 /*****************************************************************************************

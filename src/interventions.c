@@ -962,6 +962,7 @@ void intervention_notify_contacts(
 ******************************************************************************************/
 void intervention_trace_token_release( model *model, individual *indiv )
 {
+	if (DEBUG) printf("t = %d:\ti_t_t_r indiv %ld\n", model->time, indiv->idx);
 	individual *contact;
 	trace_token *index_token = indiv->index_trace_token;
 	trace_token *next_token, *token;
@@ -1000,6 +1001,7 @@ void intervention_trace_token_release( model *model, individual *indiv )
 
 	if( indiv->trace_tokens == NULL )
 		intervention_quarantine_release( model, indiv );
+	if (DEBUG) printf("end i_t_t_r\n");
 }
 
 /*****************************************************************************************
@@ -1152,8 +1154,10 @@ void intervention_on_symptoms( model *model, individual *indiv )
 	if( !model->params->interventions_on )
 		return;
 
-	if( indiv->index_trace_token != NULL )
+	if( indiv->index_trace_token != NULL ) {
+		printf("ERROR: index case got symptoms\n");
 		return;
+	}
 
 	int quarantine, time_event, test;
 	parameters *params = model->params;
@@ -1161,8 +1165,10 @@ void intervention_on_symptoms( model *model, individual *indiv )
 	double r_unif = gsl_rng_uniform( rng );
 	// TODO: indivs who are already quarantined (through contact tracing) will react to symptoms early,
 	// instead of reacting to their positive test later
-	quarantine = indiv->quarantined || ( r_unif < params->self_quarantine_fraction );
-	test = params->test_on_symptoms && ( r_unif < params->test_on_traced_fraction );
+	//quarantine = indiv->quarantined || ( r_unif < params->self_quarantine_fraction );
+	quarantine = r_unif < params->self_quarantine_fraction;
+	test = params->test_on_symptoms && ( r_unif < 1 ); // TODO: params->test_on_traced_fraction );
+	if (DEBUG) printf("t = %d:\ti_o_s indiv %ld react = %d\n", model->time, indiv->idx, quarantine);
 
 	trace_token *index_token;
 	if( quarantine )
@@ -1185,7 +1191,7 @@ void intervention_on_symptoms( model *model, individual *indiv )
 		remove_traced_on_this_trace( model, indiv );
 		if( indiv->index_token_release_event != NULL )
 			remove_event_from_event_list( model, indiv->index_token_release_event );
-		indiv->index_token_release_event = add_individual_to_event_list( model, TRACE_TOKEN_RELEASE, indiv, model->time + params->quarantine_length_traced_symptoms, NULL );
+		indiv->index_token_release_event = add_individual_to_event_list( model, TRACE_TOKEN_RELEASE, indiv, model->time + max(params->quarantine_length_self, params->quarantine_length_traced_symptoms), NULL );
 	}
 	if( test )
 		intervention_test_order( model, indiv, model->time + params->test_order_wait );

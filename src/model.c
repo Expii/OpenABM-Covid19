@@ -300,8 +300,8 @@ void set_up_novid_network( model *model )
 	for (long i = 0; i < n_total; i++) {
 		all[i] = init_set();
 		set_insert(all[i], i);
-		adj_set[i] = calloc(4, sizeof(hashset*));
-		for (int j = 0; j < 4; j++)
+		adj_set[i] = calloc(MAX_NOVID_DIST, sizeof(hashset*));
+		for (int j = 0; j < MAX_NOVID_DIST; j++)
 			adj_set[i][j] = init_set();
 	}
 
@@ -311,6 +311,11 @@ void set_up_novid_network( model *model )
 			net = model->occupation_network[j];
 		else
 			net = model->household_network;
+		if (j)
+			net = model->occupation_network[j-1];
+		else
+			net = model->household_network;
+
 		for (long i = 0; i < net->n_edges; i++) {
 			long a = net->edges[i].id1;
 			long b = net->edges[i].id2;
@@ -330,7 +335,7 @@ void set_up_novid_network( model *model )
 		indivs[i].novid_n_adj[1] = set_size(adj_set[i][1]);
 		indivs[i].novid_adj_list[1] = set_to_list(adj_set[i][1]);
 	}
-	for (int d = 2; d < 4; d++) {
+	for (int d = 2; d < MAX_NOVID_DIST; d++) {
 		for (long i = 0; i < n_total; i++) {
 			for (long j = 0; j < indivs[i].novid_n_adj[d-1]; j++) {
 				long v = indivs[i].novid_adj_list[d-1][j];
@@ -347,9 +352,24 @@ void set_up_novid_network( model *model )
 		}
 	}
 
+	long total[MAX_NOVID_DIST], freq[30];
+	for (int d = 0; d < MAX_NOVID_DIST; d++) {
+		total[d] = 0;
+		for (long i = 0; i < n_total; i++) {
+			total[d] += indivs[i].novid_n_adj[d];
+		}
+		printf("avg_degree[%d] = %lf\n", d, 1.0*total[d]/n_total);
+	}
+	for (int i = 0; i<30; i++)
+		freq[i] = 0;
+	for (long i = 0; i < n_total; i++)
+		freq[min(indivs[i].novid_n_adj[1],29)]++;
+	for (int i = 0; i<30; i++)
+		printf("deg %d: %ld\n", i, freq[i]);
+
 	for (long i = 0; i < n_total; i++) {
 		destroy_set(all[i]);
-		for (int j = 0; j < 4; j++) {
+		for (int j = 0; j < MAX_NOVID_DIST; j++) {
 			destroy_set(adj_set[i][j]);
 		}
 		free(adj_set[i]);
@@ -791,8 +811,8 @@ void set_up_strains( model *model )
 		for( jdx = 0; jdx < max_n_strains; jdx++)
 			cross_immunity[idx][jdx] 	= 1; // set complete cross-immunity
 		model->strains[idx].idx 	= -1; // if idx = -1, strain is uninitialised
-	}		
-	model->cross_immunity = cross_immunity;	
+	}
+	model->cross_immunity = cross_immunity;
 }
 
 /*****************************************************************************************
@@ -1531,6 +1551,7 @@ void return_interactions( model *model )
 ******************************************************************************************/
 int one_time_step( model *model )
 {
+	if (DEBUG) printf("\n");
 	(model->time)++;
 	if (DEBUG)
 		printf("Starting day t = %d\n",  model->time);
@@ -1548,10 +1569,12 @@ int one_time_step( model *model )
 		build_daily_network( model );
 		model->rebuild_networks = model->params->rebuild_networks;
 	}
-	individual *indiv = &(model->population[4337]);
-	if (DEBUG) printf("\nSTART t = %d, nov = %d, q = %d, cl = %d, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->app_user, indiv->quarantined, get_caution_level(model, indiv), is_in_hospital(indiv), indiv->last_novid_alert[0], indiv->last_novid_alert[1], indiv->last_novid_alert[2], indiv->last_novid_alert[3]);
+	individual *indiv = &(model->population[0]);
+	if (DEBUG) printf("\nSTART t = %d, nov = %d, status = %d, q = %d, cl = %d, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->app_user, indiv->status, indiv->quarantined, get_caution_level(model, indiv), is_in_hospital(indiv), indiv->last_novid_alert[0], indiv->last_novid_alert[1], indiv->last_novid_alert[2], indiv->last_novid_alert[3]);
+
 	transmit_virus( model );
-	if (DEBUG) printf("MID t = %d, nov = %d, q = %d, cl = %d, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->app_user, indiv->quarantined, get_caution_level(model, indiv), is_in_hospital(indiv), indiv->last_novid_alert[0], indiv->last_novid_alert[1], indiv->last_novid_alert[2], indiv->last_novid_alert[3]);
+
+	if (DEBUG) printf("MID   t = %d, nov = %d, status = %d, q = %d, cl = %d, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->app_user, indiv->status, indiv->quarantined, get_caution_level(model, indiv), is_in_hospital(indiv), indiv->last_novid_alert[0], indiv->last_novid_alert[1], indiv->last_novid_alert[2], indiv->last_novid_alert[3]);
 
 	transition_events( model, SYMPTOMATIC,       	   &transition_to_symptomatic,      		FALSE );
 	transition_events( model, SYMPTOMATIC_MILD,  	   &transition_to_symptomatic_mild, 		FALSE );
@@ -1600,7 +1623,8 @@ int one_time_step( model *model )
 		intervention_smart_release( model );
 
 	model->n_quarantine_days += model->event_lists[QUARANTINED].n_current;
-	if (DEBUG) printf("END t = %d, nov = %d, q = %d, cl = ?, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->app_user, indiv->quarantined, is_in_hospital(indiv), indiv->last_novid_alert[0], indiv->last_novid_alert[1], indiv->last_novid_alert[2], indiv->last_novid_alert[3]);
+	if (DEBUG) printf("END   t = %d, nov = %d, status = %d, q = %d, cl = %d, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->app_user, indiv->status, indiv->quarantined, get_caution_level(model, indiv), is_in_hospital(indiv), indiv->last_novid_alert[0], indiv->last_novid_alert[1], indiv->last_novid_alert[2], indiv->last_novid_alert[3]);
 
+	if (DEBUG) printf("\n");
 	return 1;
 }

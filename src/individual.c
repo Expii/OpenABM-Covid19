@@ -160,6 +160,8 @@ void initialize_hazard(
 	for( int idx = 0; idx < params->max_n_strains; idx++ )
 		if( indiv->immune_full[ idx ] == current_time || current_time == 0 )
 		{
+			if (params->adjusted_susceptibility[indiv->age_group] != 1)
+				printf("ERROR\n");
 			indiv->hazard[idx] = gsl_ran_exponential( rng, 1.0 ) / params->adjusted_susceptibility[indiv->age_group];
 			indiv->immune_full[ idx ] = NO_IMMUNITY;
 		}
@@ -181,6 +183,7 @@ void set_quarantine_status(
 {
 	if( status )
 	{
+		if (DEBUG) printf("t = %d:\tindiv %ld starts quarantine\n", model->time, indiv->idx);
 		indiv->quarantined             = TRUE;
 		indiv->infection_events->times[QUARANTINED] = time;
 
@@ -202,6 +205,7 @@ void set_quarantine_status(
 	}
 	else
 	{
+		if (DEBUG) printf("t = %d:\tindiv %ld stops quarantine\n", model->time, indiv->idx);
 		indiv->quarantined              = FALSE;
 		indiv->infection_events->times[QUARANTINED]  = UNKNOWN;
 		indiv->quarantine_event         = NULL;
