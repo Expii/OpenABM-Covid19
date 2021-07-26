@@ -44,37 +44,62 @@ void set_up_app_users( model *model )
 	long idx, jdx, age, current_users, not_users, max_user;
 	double *fraction = model->params->app_users_fraction;
 
-	for( age = 0; age < N_AGE_GROUPS; age++ )
+	if ( model->params->household_app_adoption )
 	{
-		current_users = 0;
-		not_users     = 0;
-		for( idx = 0; idx < model->params->n_total; idx++ )
-			if( model->population[ idx ].age_group == age )
-			{
-				current_users += model->population[ idx ].app_user;
-				not_users     += 1 - model->population[ idx ].app_user;
-			}
+		directory *dir = model->household_directory;
 
-		if( ( current_users + not_users) == 0 )
-			continue;
+		long *permutation = calloc( dir->n_idx, sizeof( long ) );
+		for( idx = 0; idx < max_user; idx++)
+			permutation[idx] = idx;
+		gsl_ran_shuffle( rng, permutations, dir->n_idx, sizeof( long ) );
 
-		max_user = ceil( ( current_users + not_users ) * fraction[age] ) - current_users;
-		if( max_user < 0 || max_user > not_users )
-			print_exit( "Bad target app_fraction_users" );
+		for( idx = 0; idx < dir->n_idx; idx++)
+		{
+			long *members = dir->val[idx];
+			double prob = 0;
+			for( jdx = 0; jdx < dir->n_jdx[idx]; jdx++ )
+				prob += fraction[model->population[jdx].age_group];
+			prob /= dir->n_jdx[idx];
 
-		int *users = calloc( not_users, sizeof( int ) );
+			if (permutation[idx] < prob * dir->n_idx)
+				for( jdx = 0; jdx < dir->n_jdx[idx]; jdx++ )
+					model->population[jdx].app_user = TRUE;
+		}
+	}
+	else
+	{
+		for( age = 0; age < N_AGE_GROUPS; age++ )
+		{
+			current_users = 0;
+			not_users     = 0;
+			for( idx = 0; idx < model->params->n_total; idx++ )
+				if( model->population[ idx ].age_group == age )
+				{
+					current_users += model->population[ idx ].app_user;
+					not_users     += 1 - model->population[ idx ].app_user;
+				}
 
-		for( idx = 0; idx < max_user; idx++ )
-			users[ idx ] = 1;
+			if( ( current_users + not_users) == 0 )
+				continue;
 
-		gsl_ran_shuffle( rng, users, not_users, sizeof( int ) );
+			max_user = ceil( ( current_users + not_users ) * fraction[age] ) - current_users;
+			if( max_user < 0 || max_user > not_users )
+				print_exit( "Bad target app_fraction_users" );
 
-		jdx   = 0;
-		for( idx = 0; idx < model->params->n_total; idx++ )
-			if( model->population[ idx ].age_group == age && model->population[ idx ].app_user == FALSE )
-				model->population[ idx ].app_user = users[ jdx++ ];
+			int *users = calloc( not_users, sizeof( int ) );
 
-		free( users );
+			for( idx = 0; idx < max_user; idx++ )
+				users[ idx ] = 1;
+
+			gsl_ran_shuffle( rng, users, not_users, sizeof( int ) );
+
+			jdx   = 0;
+			for( idx = 0; idx < model->params->n_total; idx++ )
+				if( model->population[ idx ].age_group == age && model->population[ idx ].app_user == FALSE )
+					model->population[ idx ].app_user = users[ jdx++ ];
+
+			free( users );
+		}
 	}
 }
 
@@ -373,7 +398,7 @@ void update_intervention_policy( model *model, int time )
 }
 
 /*****************************************************************************************
-*  Name:		intervention_notify_contracts
+*  Name:		intervention_notify_contacts
 *  Description: If the individual is an app user then we loop over the stored contacts
 *  				and if they are app users too then count the interaction as traceable
 *  Returns:		number of traceable interactions
@@ -442,14 +467,17 @@ int intervention_quarantine_until(
 	double risk_score
 )
 {
+	if (DEBUG) printf("i_q_u indiv %ld, t_o_t_t = %lf, risk_score = %lf\n", indiv->idx, indiv->traced_on_this_trace, risk_score);
 	if( is_in_hospital( indiv ) )
 		return FALSE;
 
 	if( indiv->traced_on_this_trace >= 1 || risk_score == 0 )
 		return FALSE;
 
+	if (DEBUG) printf("A\n");
 	if( index_token != NULL && indiv->traced_on_this_trace == 0 )
 	{
+		if (DEBUG) printf("B\n");
 		// add the trace token to their list
 		trace_token *token = create_trace_token( model, indiv, contact_time );
 		token->index_status = index_token->index_status;
@@ -471,26 +499,32 @@ int intervention_quarantine_until(
 	}
 	indiv->traced_on_this_trace += risk_score;
 
+	if (DEBUG) printf("C\n");
 	if( indiv->traced_on_this_trace < 1 )
 		return FALSE;
 
 	if( time <= model->time )
 		return FALSE;
 
+	if (DEBUG) printf("D\n");
 	if( indiv->quarantine_event == NULL )
 	{
+		if (DEBUG) printf("E\n");
 		indiv->quarantine_event = add_individual_to_event_list( model, QUARANTINED, indiv, model->time, NULL );
 		set_quarantine_status( indiv, model->params, model->time, TRUE, model );
 	}
 
+	if (DEBUG) printf("F\n");
 	if( indiv->quarantine_release_event != NULL )
 	{
+		if (DEBUG) printf("G\n");
 		if( maxof && indiv->quarantine_release_event->time > time )
 			return TRUE;
 
 		remove_event_from_event_list( model, indiv->quarantine_release_event );
 	}
 
+	if (DEBUG) printf("H\n");
 	indiv->quarantine_release_event = add_individual_to_event_list( model, QUARANTINE_RELEASE, indiv, time, NULL );
 
 	return TRUE;
@@ -880,7 +914,7 @@ void intervention_manual_trace( model *model, individual *indiv )
 }
 
 /*****************************************************************************************
-*  Name:		intervention_notify_contracts
+*  Name:		intervention_notify_contacts
 *  Description: If the individual is an app user then we loop over the stored contacts
 *  				and notifies them.
 *  				Start from the oldest date, so that if we have met a contact
@@ -1158,6 +1192,8 @@ void intervention_on_symptoms( model *model, individual *indiv )
 		printf("ERROR: index case got symptoms\n");
 		return;
 	}
+//	if (indiv->quarantined)
+		//printf("i_o_s indiv already quarantined\n");
 
 	int quarantine, time_event, test;
 	parameters *params = model->params;
@@ -1178,17 +1214,25 @@ void intervention_on_symptoms( model *model, individual *indiv )
 		index_token  = index_trace_token( model, indiv );
 		index_token->index_status = SYMPTOMS_ONLY;
 
-		time_event = model->time + sample_transition_time( model, SYMPTOMATIC_QUARANTINE );
+		if (params->novid_on && indiv->app_user) {
+			intervention_novid_alert( model, indiv, 0, index_token );
+			remove_traced_on_this_trace( model, indiv );
+			return;
+		}
+		else {
+			time_event = model->time + sample_transition_time( model, SYMPTOMATIC_QUARANTINE );
 
-		intervention_quarantine_until( model, indiv, NULL, time_event, TRUE, NULL, model->time, 1 );
-		indiv->traced_on_this_trace = TRUE;
+			intervention_quarantine_until( model, indiv, NULL, time_event, TRUE, NULL, model->time, 1 );
+			indiv->traced_on_this_trace = TRUE;
 
-		if( params->quarantine_household_on_symptoms )
-			intervention_quarantine_household( model, indiv, time_event, params->quarantine_household_contacts_on_symptoms, index_token, model->time );
-		if( params->trace_on_symptoms && ( params->quarantine_on_traced || params->test_on_traced ) )
-			intervention_notify_contacts( model, indiv, 1, index_token, DIGITAL_TRACE );
+			if( params->quarantine_household_on_symptoms )
+				intervention_quarantine_household( model, indiv, time_event, params->quarantine_household_contacts_on_symptoms, index_token, model->time );
+			if( params->trace_on_symptoms && ( params->quarantine_on_traced || params->test_on_traced ) )
+				intervention_notify_contacts( model, indiv, 1, index_token, DIGITAL_TRACE );
 
-		remove_traced_on_this_trace( model, indiv );
+			remove_traced_on_this_trace( model, indiv );
+		}
+
 		if( indiv->index_token_release_event != NULL )
 			remove_event_from_event_list( model, indiv->index_token_release_event );
 		indiv->index_token_release_event = add_individual_to_event_list( model, TRACE_TOKEN_RELEASE, indiv, model->time + max(params->quarantine_length_self, params->quarantine_length_traced_symptoms), NULL );
@@ -1464,6 +1508,7 @@ int resolve_quarantine_reasons(int *quarantine_reasons)
 *  Returns:		void
 ******************************************************************************************/
 void intervention_novid_alert(model *model, individual *indiv, int dist, trace_token *index_token) {
+	if (DEBUG) printf("i_n_a indiv %ld, deg = %ld\n", indiv->idx, indiv->novid_n_adj[1]);
 	for (int d = 0; d + dist < MAX_NOVID_DIST; d++) {
 		for (long i = 0; i < indiv->novid_n_adj[d]; i++) {
 			long idx2 = indiv->novid_adj_list[d][i];
@@ -1471,6 +1516,7 @@ void intervention_novid_alert(model *model, individual *indiv, int dist, trace_t
 			indiv2->last_novid_alert[d+dist] = model->time;
 			//if (indiv2->idx == 8752)
 				//printf("\nNOVID alert %ld -> %ld, time = %d\n\n", indiv->idx, indiv2->idx, model->time);
+			if (DEBUG) printf("t = %d:\t%ld -> %ld warning\n", model->time, indiv->idx, indiv2->idx);
 			intervention_quarantine_until( model, indiv2, indiv, model->time + model->params->novid_quarantine_length, TRUE, index_token, model->time, 1 );
 		}
 	}

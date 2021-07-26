@@ -527,14 +527,17 @@ void read_param_file( parameters *params)
 	check = fscanf(parameter_file, " %i ,", &(params->novid_quarantine_length));
 	if( check < 1){ print_exit("Failed to read parameter novid_quarantine_length\n"); };
 
-	for (i = 0; i < MAX_NOVID_DIST; i++){
+	for (i = 0; i < 4; i++){
 		check = fscanf(parameter_file, " %lf ,", &(params->novid_soft_multiplier[i]));
 		if( check < 1){ print_exit("Failed to read parameter novid_soft_multiplier)\n"); };
 	}
-	params->novid_soft_multiplier[MAX_NOVID_DIST] = 1;
+	params->novid_soft_multiplier[4] = 1;
 
 	check = fscanf(parameter_file, " %lf ,", &(params->novid_report_manual_traced));
 	if( check < 1){ print_exit("Failed to read parameter novid_report_manual_traced\n"); };
+
+	check = fscanf(parameter_file, " %i ,", &(params->household_app_adoption));
+	if( check < 1){ print_exit("Failed to read parameter household_app_adoption\n"); };
 
 	fclose(parameter_file);
 }

@@ -96,14 +96,13 @@ void build_watts_strogatz_network(
 			ii = edge_mat[i][j];
 			edge_mat[ii][n_edges_arr[ii]++] = i;
 		}
-	free( n_edges_arr_init );
 
 	double u;
 	long new_contact, old_contact;
 
 	// Step 2: Randomly rewire connections with probability "p_rewire"
 	for(i = 0; i < N; i++){
-		for(j = 0; j < n_edges_arr[i]; j++){
+		for(j = 0; j < n_edges_arr_init[i]; j++){
 
 			u = gsl_rng_uniform(rng);
 			
@@ -166,6 +165,7 @@ void build_watts_strogatz_network(
 		free(edge_mat[i]);
 	free(edge_mat);
 	free(n_edges_arr);
+	free(n_edges_arr_init);
 	free(node_list);
 }
 

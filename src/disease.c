@@ -242,11 +242,16 @@ void transmit_virus_by_type(
 							continue;
 						}
 
-						short caution_level = min(get_caution_level(model, infector), get_caution_level(model, interaction->individual));
 						
-						hazard_rate   = list->infectious_curve[interaction->type][ t_infect - 1 ] * infector_mult * model->params->novid_soft_multiplier[caution_level];
+						hazard_rate = list->infectious_curve[interaction->type][ t_infect - 1 ] * infector_mult;
+						if (model->params->soft_quarantine_on) {
+							short caution_level = min(get_caution_level(model, infector), get_caution_level(model, interaction->individual));
+							if (DEBUG) printf("clvl(%ld) = %d, clvl(%ld) = %d\n", infector->idx, get_caution_level(model, infector), interaction->individual->idx, get_caution_level(model, interaction->individual));
+							hazard_rate *= model->params->novid_soft_multiplier[caution_level];
+						}
+
 						if (model->time < 50)
-							if (DEBUG) printf("t = %d:\t%ld -> %ld attempt, t_infect = %d, prob = %lf\n", model->time, infector->idx, interaction->individual->idx, t_infect, list->infectious_curve[interaction->type][ t_infect - 1 ]);
+							if (DEBUG) printf("t = %d:\t%ld -> %ld attempt, t_infect = %d, prob = %lf\n", model->time, infector->idx, interaction->individual->idx, t_infect, hazard_rate);
 						interaction->individual->hazard[ strain_idx ] -= hazard_rate;
 
 						if( interaction->individual->hazard[ strain_idx ] < 0 )

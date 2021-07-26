@@ -950,6 +950,15 @@ double get_param_novid_report_manual_traced(parameters *params)
 }
 
 /*****************************************************************************************
+*  Name:        get_param_household_app_adoption
+*  Description: Gets the value of a parameter
+******************************************************************************************/
+int get_param_household_app_adoption(parameters *params)
+{
+    return params->household_app_adoption;
+}
+
+/*****************************************************************************************
 *  Name:        set_param_rng_seed
 *  Description: Sets the value of parameter
 ******************************************************************************************/
@@ -1947,6 +1956,17 @@ int set_param_novid_report_manual_traced(parameters *params, double value)
     params->novid_report_manual_traced = value;
     return TRUE;
 }
+
+/*****************************************************************************************
+*  Name:        set_param_household_app_adoption
+*  Description: Sets the value of parameter
+******************************************************************************************/
+int set_param_household_app_adoption(parameters *params, int value)
+{
+    params->household_app_adoption = value;
+    return TRUE;
+}
+
 
 
 void add_household_to_ref_households(parameters *params, int idx, int i_0_9, int i_10_19, int i_20_29, int i_30_39, int i_40_49, int i_50_59, int i_60_69, int i_70_79, int i_80){

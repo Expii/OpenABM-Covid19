@@ -209,9 +209,10 @@ typedef struct{
 	int novid_quarantine_length;	// How long NOVID users quarantine, starting from the time they were traced
 
 	// Soft quarantine multiplier for NOVID users notified of nearby positive cases
-	double novid_soft_multiplier[MAX_NOVID_DIST+1]; // TODO: rename soft_quarantine_multiplier
+	double novid_soft_multiplier[5]; // TODO: rename soft_quarantine_multiplier
 	double novid_report_manual_traced; // Probability that a manually traced contact of a positive case will report this info to NOVID
 
+	int household_app_adoption;		// Force households to either have everybody using the app, or nobody using it
 } parameters;
 
 /************************************************************************/

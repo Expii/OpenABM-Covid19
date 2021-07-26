@@ -534,32 +534,44 @@ void set_discharged( individual *indiv, parameters* params, int time )
 ******************************************************************************************/
 short get_caution_level( model *model, individual *indiv )
 {
-	if (DEBUG) {
-		if (!indiv->app_user)
-			return 4;
+	if (!indiv->app_user || !indiv->quarantined)
+		return 4;
+	if (indiv->caution_level_time == model->time)
+		return indiv->caution_level;
+
+	if (!model->params->soft_quarantine_household) {
+		indiv->caution_level = compute_caution_level(model, indiv);
+		indiv->caution_level_time = model->time;
+		return indiv->caution_level;
 	}
 	else {
-		if (!indiv->app_user || !indiv->quarantined)
-			return 4;
-		if (indiv->caution_level_time == model->time)
-			return indiv->caution_level;
+		int n = model->household_directory->n_jdx[indiv->house_no];
+		long *members = model->household_directory->val[indiv->house_no];
+		short level = MAX_NOVID_DIST;
+		for (int i = 0; i < n; i++) {
+			individual *member = &(model->population[members[i]]);
+			if (member->app_user && member->quarantined)
+				level = min(level, compute_caution_level(model, member));
+		}
+		for (int i = 0; i < n; i++) {
+			individual *member = &(model->population[members[i]]);
+			member->caution_level = level;
+			member->caution_level_time = model->time;
+		}
+		return level;
 	}
+}
 
-	//n          = model->household_directory->n_jdx[indiv->house_no];
-	//members    = model->household_directory->val[indiv->house_no];
-	short level = 4;
-	for (short i = 3; i >= 0; i--) {
-		// TODO: check for off by one error
+/*****************************************************************************************
+*  Name:		compute_caution_level
+*  Description: calculates the current caution level of an individual
+*  Returns:		the caution level
+******************************************************************************************/
+short compute_caution_level( model *model, individual *indiv) {
+	short level = MAX_NOVID_DIST;
+	for (short i = MAX_NOVID_DIST-1; i >= 0; i--) {
 		if (indiv->last_novid_alert[i] >= model->time - model->params->novid_quarantine_length)
 			level = i;
-	}
-	indiv->caution_level = level;
-	indiv->caution_level_time = model->time;
-	if (DEBUG) {
-		if (!indiv->quarantined && level != 4) {
-			printf("=============================== ERROR! indiv %ld has caution level %d, should be quarantined at time t = %d\n", indiv->idx, level, model->time);
-			level = 4;
-		}
 	}
 	return level;
 }

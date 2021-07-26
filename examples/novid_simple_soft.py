@@ -15,11 +15,13 @@ caution_multipliers = [
     [0.0, 0.0, 1.0, 1.0],
     [1.0, 1.0, 1.0, 1.0],
     [0.125, 1.0, 0.25, 0.5],
+    [0.0, 1.0, 1.0, 1.0],
 ]
 
-caution_idx = 3
+caution_idx = 5
 n_seed_infection = 1000
-alertTime = 2
+alertTime = 3
+time_to_symptoms = 6
 
 start = time.time()
 
@@ -27,7 +29,7 @@ start = time.time()
 model = abm.Model( params = {
     'n_total': 160000,
     'end_time': 200,
-    'rng_seed': 2,
+    'rng_seed': 123,
     'n_seed_infection': n_seed_infection,
     'infectious_rate': 3,
     'household_size_1': 0,
@@ -55,9 +57,6 @@ model = abm.Model( params = {
     'mean_random_interactions_child': 0,
     'mean_random_interactions_adult': 0,
     'mean_random_interactions_elderly': 0,
-    'sd_random_interactions_child': 0.01,
-    'sd_random_interactions_adult': 0.01,
-    'sd_random_interactions_elderly': 0.01,
     'relative_susceptibility_0_9': 1,
     'relative_susceptibility_10_19': 1,
     'relative_susceptibility_20_29': 1,
@@ -103,11 +102,11 @@ model = abm.Model( params = {
     'self_quarantine_fraction': 1.0,
     'quarantine_length_self': alertTime,
     'quarantine_dropout_self': 0,
-    'mean_time_to_symptoms': 2,
+    'mean_time_to_symptoms': time_to_symptoms,
     'sd_time_to_symptoms': 0,
     'daily_non_cov_symptoms_rate': 0,
 
-    'novid_on': 0,
+    'novid_on': 1,
     'app_users_fraction_0_9': 1,
     'app_users_fraction_10_19': 1,
     'app_users_fraction_20_29': 1,
@@ -126,6 +125,13 @@ model = abm.Model( params = {
     'quarantine_compliance_traced_symptoms': 1,
     'quarantine_dropout_traced_symptoms': 0,
     'quarantine_length_traced_symptoms': alertTime,
+
+    'soft_quarantine_on': 1,
+    'novid_soft_multiplier_1': 0,
+    'novid_soft_multiplier_2': 0,
+    'novid_soft_multiplier_3': 1,
+    'novid_soft_multiplier_4': 1,
+    'novid_quarantine_length': alertTime,
 })
 
 mid = time.time()
