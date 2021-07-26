@@ -90,9 +90,9 @@ void initialize_individual(
 
 	indiv->novid_adj_list = calloc(4, sizeof(long*));
 	indiv->novid_n_adj = calloc(4, sizeof(long));
-	indiv->last_novid_alert = calloc(4, sizeof(short));
+	indiv->caution_until = calloc(4, sizeof(short));
 	for (int i = 0; i < 4; i++)
-		indiv->last_novid_alert[i] = -1000; // TODO: replace with parameter
+		indiv->caution_until[i] = -1000; // TODO: replace with parameter
 	indiv->caution_level = 4;
 	indiv->caution_level_time = 0;
 }
@@ -534,7 +534,7 @@ void set_discharged( individual *indiv, parameters* params, int time )
 ******************************************************************************************/
 short get_caution_level( model *model, individual *indiv )
 {
-	if (!indiv->app_user || !indiv->quarantined)
+	if (!indiv->app_user)
 		return 4;
 	if (indiv->caution_level_time == model->time)
 		return indiv->caution_level;
@@ -550,7 +550,7 @@ short get_caution_level( model *model, individual *indiv )
 		short level = MAX_NOVID_DIST;
 		for (int i = 0; i < n; i++) {
 			individual *member = &(model->population[members[i]]);
-			if (member->app_user && member->quarantined)
+			if (member->app_user)
 				level = min(level, compute_caution_level(model, member));
 		}
 		for (int i = 0; i < n; i++) {
@@ -570,7 +570,7 @@ short get_caution_level( model *model, individual *indiv )
 short compute_caution_level( model *model, individual *indiv) {
 	short level = MAX_NOVID_DIST;
 	for (short i = MAX_NOVID_DIST-1; i >= 0; i--) {
-		if (indiv->last_novid_alert[i] >= model->time - model->params->novid_quarantine_length)
+		if (indiv->caution_until[i] >= model->time)
 			level = i;
 	}
 	return level;
@@ -603,7 +603,7 @@ void destroy_individual( individual *indiv )
 		free( indiv->novid_adj_list[i] );
 	free( indiv->novid_adj_list );
 	free( indiv->novid_n_adj );
-	free( indiv->last_novid_alert );
+	free( indiv->caution_until );
 }
 
 /*****************************************************************************************

@@ -55,7 +55,7 @@ struct individual{
 
 	long **novid_adj_list;
 	long *novid_n_adj;
-	short *last_novid_alert;
+	short *caution_until;
 	short caution_level;		// lazily updated
 	short caution_level_time;	// time that caution_level was last computed
 

@@ -20,8 +20,9 @@ caution_multipliers = [
 
 caution_idx = 5
 n_seed_infection = 1000
-alertTime = 3
+alertTime = 7
 time_to_symptoms = 6
+app_adoption = 0.3
 
 start = time.time()
 
@@ -29,7 +30,7 @@ start = time.time()
 model = abm.Model( params = {
     'n_total': 160000,
     'end_time': 200,
-    'rng_seed': 123,
+    'rng_seed': 44626,
     'n_seed_infection': n_seed_infection,
     'infectious_rate': 3,
     'household_size_1': 0,
@@ -99,7 +100,7 @@ model = abm.Model( params = {
     'mild_fraction_70_79': 1,
     'mild_fraction_80': 1,
 
-    'self_quarantine_fraction': 1.0,
+    'self_quarantine_fraction': 0.5,
     'quarantine_length_self': alertTime,
     'quarantine_dropout_self': 0,
     'mean_time_to_symptoms': time_to_symptoms,
@@ -107,15 +108,17 @@ model = abm.Model( params = {
     'daily_non_cov_symptoms_rate': 0,
 
     'novid_on': 1,
-    'app_users_fraction_0_9': 1,
-    'app_users_fraction_10_19': 1,
-    'app_users_fraction_20_29': 1,
-    'app_users_fraction_30_39': 1,
-    'app_users_fraction_40_49': 1,
-    'app_users_fraction_50_59': 1,
-    'app_users_fraction_60_69': 1,
-    'app_users_fraction_70_79': 1,
-    'app_users_fraction_80': 1,
+    'app_users_fraction_0_9': app_adoption,
+    'app_users_fraction_10_19': app_adoption,
+    'app_users_fraction_20_29': app_adoption,
+    'app_users_fraction_30_39': app_adoption,
+    'app_users_fraction_40_49': app_adoption,
+    'app_users_fraction_50_59': app_adoption,
+    'app_users_fraction_60_69': app_adoption,
+    'app_users_fraction_70_79': app_adoption,
+    'app_users_fraction_80': app_adoption,
+    'soft_quarantine_household': 1, # max household caution
+    'household_app_adoption': 1,
 
     'trace_on_symptoms': 1,
     'quarantine_on_traced': 1,
@@ -127,8 +130,8 @@ model = abm.Model( params = {
     'quarantine_length_traced_symptoms': alertTime,
 
     'soft_quarantine_on': 1,
-    'novid_soft_multiplier_1': 0,
-    'novid_soft_multiplier_2': 0,
+    'novid_soft_multiplier_1': 0.125,
+    'novid_soft_multiplier_2': 0.125,
     'novid_soft_multiplier_3': 1,
     'novid_soft_multiplier_4': 1,
     'novid_quarantine_length': alertTime,

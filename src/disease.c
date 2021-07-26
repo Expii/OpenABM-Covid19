@@ -250,8 +250,9 @@ void transmit_virus_by_type(
 							hazard_rate *= model->params->novid_soft_multiplier[caution_level];
 						}
 
-						if (model->time < 50)
+						if (model->time < 50) {
 							if (DEBUG) printf("t = %d:\t%ld -> %ld attempt, t_infect = %d, prob = %lf\n", model->time, infector->idx, interaction->individual->idx, t_infect, hazard_rate);
+						}
 						interaction->individual->hazard[ strain_idx ] -= hazard_rate;
 
 						if( interaction->individual->hazard[ strain_idx ] < 0 )

@@ -1570,11 +1570,11 @@ int one_time_step( model *model )
 		model->rebuild_networks = model->params->rebuild_networks;
 	}
 	individual *indiv = &(model->population[0]);
-	if (DEBUG) printf("\nSTART t = %d, nov = %d, status = %d, q = %d, cl = %d, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->app_user, indiv->status, indiv->quarantined, get_caution_level(model, indiv), is_in_hospital(indiv), indiv->last_novid_alert[0], indiv->last_novid_alert[1], indiv->last_novid_alert[2], indiv->last_novid_alert[3]);
+	if (DEBUG) printf("\nSTART t = %d, nov = %d, status = %d, q = %d, cl = %d, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->app_user, indiv->status, indiv->quarantined, get_caution_level(model, indiv), is_in_hospital(indiv), indiv->caution_until[0], indiv->caution_until[1], indiv->caution_until[2], indiv->caution_until[3]);
 
 	transmit_virus( model );
 
-	if (DEBUG) printf("MID   t = %d, nov = %d, status = %d, q = %d, cl = %d, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->app_user, indiv->status, indiv->quarantined, get_caution_level(model, indiv), is_in_hospital(indiv), indiv->last_novid_alert[0], indiv->last_novid_alert[1], indiv->last_novid_alert[2], indiv->last_novid_alert[3]);
+	if (DEBUG) printf("MID   t = %d, nov = %d, status = %d, q = %d, cl = %d, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->app_user, indiv->status, indiv->quarantined, get_caution_level(model, indiv), is_in_hospital(indiv), indiv->caution_until[0], indiv->caution_until[1], indiv->caution_until[2], indiv->caution_until[3]);
 
 	transition_events( model, SYMPTOMATIC,       	   &transition_to_symptomatic,      		FALSE );
 	transition_events( model, SYMPTOMATIC_MILD,  	   &transition_to_symptomatic_mild, 		FALSE );
@@ -1623,7 +1623,7 @@ int one_time_step( model *model )
 		intervention_smart_release( model );
 
 	model->n_quarantine_days += model->event_lists[QUARANTINED].n_current;
-	if (DEBUG) printf("END   t = %d, nov = %d, status = %d, q = %d, cl = %d, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->app_user, indiv->status, indiv->quarantined, get_caution_level(model, indiv), is_in_hospital(indiv), indiv->last_novid_alert[0], indiv->last_novid_alert[1], indiv->last_novid_alert[2], indiv->last_novid_alert[3]);
+	if (DEBUG) printf("END   t = %d, nov = %d, status = %d, q = %d, cl = %d, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->app_user, indiv->status, indiv->quarantined, get_caution_level(model, indiv), is_in_hospital(indiv), indiv->caution_until[0], indiv->caution_until[1], indiv->caution_until[2], indiv->caution_until[3]);
 
 	if (DEBUG) printf("\n");
 	return 1;

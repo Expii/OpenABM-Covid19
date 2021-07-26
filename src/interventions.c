@@ -49,21 +49,27 @@ void set_up_app_users( model *model )
 		directory *dir = model->household_directory;
 
 		long *permutation = calloc( dir->n_idx, sizeof( long ) );
-		for( idx = 0; idx < max_user; idx++)
+		for( idx = 0; idx < dir->n_idx; idx++)
 			permutation[idx] = idx;
-		gsl_ran_shuffle( rng, permutations, dir->n_idx, sizeof( long ) );
+		gsl_ran_shuffle( rng, permutation, dir->n_idx, sizeof( long ) );
 
 		for( idx = 0; idx < dir->n_idx; idx++)
 		{
 			long *members = dir->val[idx];
 			double prob = 0;
 			for( jdx = 0; jdx < dir->n_jdx[idx]; jdx++ )
-				prob += fraction[model->population[jdx].age_group];
+			{
+				individual *member = &(model->population[members[jdx]]);
+				prob += fraction[member->age_group];
+			}
 			prob /= dir->n_jdx[idx];
 
 			if (permutation[idx] < prob * dir->n_idx)
 				for( jdx = 0; jdx < dir->n_jdx[idx]; jdx++ )
-					model->population[jdx].app_user = TRUE;
+				{
+					individual *member = &(model->population[members[jdx]]);
+					member->app_user = TRUE;
+				}
 		}
 	}
 	else
@@ -101,6 +107,11 @@ void set_up_app_users( model *model )
 			free( users );
 		}
 	}
+	// TODO: remove
+	double cnt = 0;
+	for (int i = 0; i<model->params->n_total; i++)
+		cnt += model->population[i].app_user;
+	printf("real app adoption = %lf\n", cnt/model->params->n_total);
 }
 
 /*****************************************************************************************
@@ -1209,14 +1220,15 @@ void intervention_on_symptoms( model *model, individual *indiv )
 	trace_token *index_token;
 	if( quarantine )
 	{
-		//if (indiv->idx == 1994)
-			//printf("\ni_o_s, calling i_t_t, indiv %ld, time = %d\n\n", indiv->idx, model->time);
 		index_token  = index_trace_token( model, indiv );
 		index_token->index_status = SYMPTOMS_ONLY;
 
-		if (params->novid_on && indiv->app_user) {
-			intervention_novid_alert( model, indiv, 0, index_token );
-			remove_traced_on_this_trace( model, indiv );
+		if (params->novid_on) {
+			// TODO: add app_report_prob for self and contacts
+			if (indiv->app_user)
+			{
+				intervention_novid_alert( model, indiv, 0, index_token );
+			}
 			return;
 		}
 		else {
@@ -1237,8 +1249,8 @@ void intervention_on_symptoms( model *model, individual *indiv )
 			remove_event_from_event_list( model, indiv->index_token_release_event );
 		indiv->index_token_release_event = add_individual_to_event_list( model, TRACE_TOKEN_RELEASE, indiv, model->time + max(params->quarantine_length_self, params->quarantine_length_traced_symptoms), NULL );
 	}
-	if( test )
-		intervention_test_order( model, indiv, model->time + params->test_order_wait );
+//	if( test )
+//		intervention_test_order( model, indiv, model->time + params->test_order_wait );
 }
 
 /*****************************************************************************************
@@ -1323,7 +1335,7 @@ void intervention_on_positive_result( model *model, individual *indiv )
 		release_time = max( release_time, model->time + params->manual_trace_delay);
 	}
 
-	if( index_already )
+	if( index_already)
 		intervention_index_case_symptoms_to_positive( model, index_token );
 
 	if( indiv->index_token_release_event != NULL )
@@ -1508,16 +1520,12 @@ int resolve_quarantine_reasons(int *quarantine_reasons)
 *  Returns:		void
 ******************************************************************************************/
 void intervention_novid_alert(model *model, individual *indiv, int dist, trace_token *index_token) {
-	if (DEBUG) printf("i_n_a indiv %ld, deg = %ld\n", indiv->idx, indiv->novid_n_adj[1]);
 	for (int d = 0; d + dist < MAX_NOVID_DIST; d++) {
 		for (long i = 0; i < indiv->novid_n_adj[d]; i++) {
 			long idx2 = indiv->novid_adj_list[d][i];
 			individual *indiv2 = &(model->population[idx2]);
-			indiv2->last_novid_alert[d+dist] = model->time;
-			//if (indiv2->idx == 8752)
-				//printf("\nNOVID alert %ld -> %ld, time = %d\n\n", indiv->idx, indiv2->idx, model->time);
-			if (DEBUG) printf("t = %d:\t%ld -> %ld warning\n", model->time, indiv->idx, indiv2->idx);
-			intervention_quarantine_until( model, indiv2, indiv, model->time + model->params->novid_quarantine_length, TRUE, index_token, model->time, 1 );
+			// TODO: add compliance and dropout sampling
+			indiv2->caution_until[d+dist] = model->time + model->params->novid_quarantine_length;
 		}
 	}
 }
