@@ -30,7 +30,7 @@ start = time.time()
 model = abm.Model( params = {
     'n_total': 160000,
     'end_time': 200,
-    'rng_seed': 44626,
+    'rng_seed': 24725,
     'n_seed_infection': n_seed_infection,
     'infectious_rate': 3,
     'household_size_1': 0,
@@ -132,9 +132,22 @@ model = abm.Model( params = {
     'soft_quarantine_on': 1,
     'novid_soft_multiplier_1': 0.125,
     'novid_soft_multiplier_2': 0.125,
-    'novid_soft_multiplier_3': 1,
-    'novid_soft_multiplier_4': 1,
+    'novid_soft_multiplier_3': 0.25,
+    'novid_soft_multiplier_4': 0.5,
     'novid_quarantine_length': alertTime,
+    
+    'manual_trace_on': 1,
+    'manual_trace_time_on': 1,
+    'manual_trace_on_hospitalization': 1,
+    'manual_trace_on_positive': 1,
+    'manual_trace_n_workers': 1000000,
+    'manual_trace_interviews_per_worker_day': 6,
+    'manual_trace_notifications_per_worker_day': 12,
+    'manual_traceable_fraction_household': 1.0,
+    'manual_traceable_fraction_occupation': 1.0,
+    'manual_traceable_fraction_random': 0.0,
+    'novid_report_manual_traced': 0.1,
+    'manual_trace_delay': 0,
 })
 
 mid = time.time()
@@ -153,7 +166,6 @@ print(f'Time taken: {mid-start}, {end-mid} seconds')
 print(list(model.results['R_inst']))
 total_infected = list(model.results['total_infected'])
 print(total_infected)
-print(list(model.results['n_quarantine']))
 total_infected = [n_seed_infection] + total_infected
 delta_infected = [total_infected[i] - total_infected[i-1] for i in range(1, len(total_infected))]
 print(delta_infected)
