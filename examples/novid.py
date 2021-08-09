@@ -32,7 +32,7 @@ app_report_prob = 0.2
 n_seed_infection = 0
 new_seed_infection_rate = 1
 n_total = 100000
-end_time = 50
+end_time = 200
 
 start = time.time()
 
@@ -77,7 +77,7 @@ model = abm.Model( params = {
     #'app_users_fraction_80':     app_adoption,
     'household_app_adoption': 1,
     'cluster_app_adoption': 1,
-    'soft_quarantine_household': 0, # max household caution
+    'soft_quarantine_household': 1, # max household caution
 
     'trace_on_symptoms': 1,
     'quarantine_on_traced': 1,
