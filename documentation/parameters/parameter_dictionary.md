@@ -21,6 +21,7 @@
 | `days_of_interactions` | 10 | - | Length of historic interactions traced (days) | - |
 | `end_time` | 200 | - | End time (total number of simulated days) | - |
 | `n_seed_infection` | 10 | - | Number of infections seeded at simulation start | - |
+| `new_seed_infection_rate` | 0 | - | Number of new seed infections added each day (can be fractional) | - |
 | `mean_infectious_period` | 5.5 | &#956; | Mean of the generation time distribution (days) | Ferretti et al in prep 2020; Ferretti & Wymant et al 2020; Xia et al 2020; He et al 2020; Cheng et al 2020 |
 | `sd_infectious_period` | 2.14 | &#963; | Standard deviation (days) of infectious period | Ferretti et al in prep 2020; Ferretti & Wymant et al 2020; Xia et al 2020; He et al 2020; Cheng et al 2020 |
 | `infectious_rate` | 5.8 | *R* | Mean number of individuals infected by each infectious individual with moderate to severe symptoms | Derived from calibration |
@@ -224,3 +225,4 @@
 | `novid_soft_multiplier_4` | 0.5 | - | Soft quarantine multiplier for NOVID users notified of a positive case at distance 3 | - |
 | `novid_report_manual_traced` | 0 | - | Probability that a manually traced contact of a positive case reports this info to NOVID | - |
 | `household_app_adoption` | 0 | - | Force households to either have everybody using the app, or nobody using it (0=no, 1=yes) | - |
+| `cluster_app_adoption` | 0 | - | Make app users clustered together (0=no, 1=yes) | - |

@@ -2,6 +2,7 @@
 | Name | Value | Symbol | Description | Source | 
 |  ---- | ---- | ---- | ---- | ---- |
 | `n_seed_infection` | 10 | - | Number of infections seeded at simulation start | - |
+| `new_seed_infection_rate` | 0 | - | Number of new seed infections added each day (can be fractional) | - |
 | `mean_infectious_period` | 5.5 | &#956; | Mean of the generation time distribution (days) | Ferretti et al in prep 2020; Ferretti & Wymant et al 2020; Xia et al 2020; He et al 2020; Cheng et al 2020 |
 | `sd_infectious_period` | 2.14 | &#963; | Standard deviation (days) of infectious period | Ferretti et al in prep 2020; Ferretti & Wymant et al 2020; Xia et al 2020; He et al 2020; Cheng et al 2020 |
 | `infectious_rate` | 5.8 | *R* | Mean number of individuals infected by each infectious individual with moderate to severe symptoms | Derived from calibration |

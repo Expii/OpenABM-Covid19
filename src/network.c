@@ -58,7 +58,6 @@ void build_watts_strogatz_network(
 
     // If k is the upper-bound value, no need to rewire.
     if ( k ==  (N - 1) / 2 * 2 ) p_rewire = 0.0;
-	printf("watts strogatz N = %ld, k = %lf, beta = %lf\n", N, k, p_rewire);
 
 	long k_used, k_right, i, j, ii;
 	double p_right;
@@ -66,7 +65,6 @@ void build_watts_strogatz_network(
 	// handle non-integer k, have different number of connections to the right
 	k_right = floor( k / 2 );
 	p_right = k / 2 -  k_right;
-	printf("k_right = %ld\n", k_right);
 
 	// Allocate memory (needed for large N)
 	long** edge_mat;

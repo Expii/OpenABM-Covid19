@@ -244,7 +244,7 @@ void transmit_virus_by_type(
 
 						
 						hazard_rate = list->infectious_curve[interaction->type][ t_infect - 1 ] * infector_mult;
-						if (model->params->soft_quarantine_on) {
+						if (model->params->soft_quarantine_on) { // && infector->house_no != interaction->individual->house_no) {
 							short caution_level = min(get_caution_level(model, infector), get_caution_level(model, interaction->individual));
 							if (DEBUG) printf("clvl(%ld) = %d, clvl(%ld) = %d\n", infector->idx, get_caution_level(model, infector), interaction->individual->idx, get_caution_level(model, interaction->individual));
 							hazard_rate *= model->params->novid_soft_multiplier[caution_level];
@@ -258,6 +258,13 @@ void transmit_virus_by_type(
 						if( interaction->individual->hazard[ strain_idx ] < 0 )
 						{
 							if (DEBUG) printf("t = %d:\t%ld -> %ld infected\n", model->time, infector->idx, interaction->individual->idx);
+
+							// TODO: delete
+							model->n_app_user_infected++;
+							interaction->individual->hazard[ strain_idx ] = 10000;
+							continue;
+
+
 							new_infection( model, interaction->individual, infector, interaction->network_id, infector->infection_events->strain );
 							interaction->individual->infection_events->infector_network = interaction->type;
 						}
@@ -387,6 +394,9 @@ void transition_one_disese_event(
 				model->n_quarantine_app_user_infected++;
 			}
 		}
+	}
+	if (from == SUSCEPTIBLE && indiv->app_user == TRUE){
+		model->n_app_user_infected++;
 	}
 
 	if( to != NO_EVENT )

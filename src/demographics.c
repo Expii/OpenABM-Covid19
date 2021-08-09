@@ -239,7 +239,6 @@ void add_reference_household( double *array, long hdx, int **REFERENCE_HOUSEHOLD
 ******************************************************************************************/
 void generate_household_distribution( model *model )
 {
-	printf("Start generate_household_distribution\n");
 	int idx, housesize, age;
 	long hdx, n_households, pdx, sample;
 	double error, last_error, acceptance;
@@ -376,7 +375,6 @@ void generate_household_distribution( model *model )
 
 	free( households );
 	free( REFERENCE_HOUSEHOLD_SIZE );
-	printf("End generate_household_distribution\n");
 }
 
 /*****************************************************************************************

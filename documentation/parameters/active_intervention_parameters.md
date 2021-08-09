@@ -53,3 +53,4 @@
 | `novid_soft_multiplier_4` | 0.5 | - | Soft quarantine multiplier for NOVID users notified of a positive case at distance 3 | - |
 | `novid_report_manual_traced` | 0 | - | Probability that a manually traced contact of a positive case reports this info to NOVID | - |
 | `household_app_adoption` | 0 | - | Force households to either have everybody using the app, or nobody using it (0=no, 1=yes) | - |
+| `cluster_app_adoption` | 0 | - | Make app users clustered together (0=no, 1=yes) | - |

@@ -19,10 +19,10 @@ caution_multipliers = [
 ]
 
 caution_idx = 5
-n_seed_infection = 1000
+n_seed_infection = 10
 alertTime = 7
-time_to_symptoms = 6
-app_adoption = 0.3
+time_to_symptoms = 8
+app_adoption = 0.5
 
 start = time.time()
 
@@ -30,7 +30,7 @@ start = time.time()
 model = abm.Model( params = {
     'n_total': 160000,
     'end_time': 200,
-    'rng_seed': 24725,
+    'rng_seed': 23725,
     'n_seed_infection': n_seed_infection,
     'infectious_rate': 3,
     'household_size_1': 0,
@@ -146,7 +146,7 @@ model = abm.Model( params = {
     'manual_traceable_fraction_household': 1.0,
     'manual_traceable_fraction_occupation': 1.0,
     'manual_traceable_fraction_random': 0.0,
-    'novid_report_manual_traced': 0.1,
+    'novid_report_manual_traced': 0.5,
     'manual_trace_delay': 0,
 })
 

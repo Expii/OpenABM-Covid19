@@ -140,6 +140,8 @@ void set_insert(hashset *hs, key_type key) {
 }
 
 bool set_contains(hashset *hs, key_type key) {
+	if (set_empty(hs))
+		return false;
 	uint32_t idx = hash(key) & hs->bitmask;
 	elem *p = &(hs->data[idx]);
 	for (short shift = 0; p->shift >= shift; p++, shift++) {

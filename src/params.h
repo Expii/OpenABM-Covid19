@@ -28,6 +28,7 @@ typedef struct{
 	int days_of_interactions;		// the number of days of interactions to keep
 	int end_time;				    // maximum end time
 	int n_seed_infection;			// number of people seeded with the infections
+	double new_seed_infection_rate;	// number of new seed infections added each day (can be fractional)
 	int rebuild_networks;			// should net works be rebuilt every time step or just on parameter changes
 
 	double mean_random_interactions[N_AGE_TYPES]; // mean number of random interactions each day
@@ -213,6 +214,7 @@ typedef struct{
 	double novid_report_manual_traced; // Probability that a manually traced contact of a positive case will report this info to NOVID
 
 	int household_app_adoption;		// Force households to either have everybody using the app, or nobody using it
+	int cluster_app_adoption;		// Make app users clustered together
 } parameters;
 
 /************************************************************************/

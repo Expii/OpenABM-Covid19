@@ -959,6 +959,25 @@ int get_param_household_app_adoption(parameters *params)
 }
 
 /*****************************************************************************************
+*  Name:        get_param_cluster_app_adoption
+*  Description: Gets the value of a parameter
+******************************************************************************************/
+int get_param_cluster_app_adoption(parameters *params)
+{
+    return params->cluster_app_adoption;
+}
+
+/*****************************************************************************************
+*  Name:        get_param_new_seed_infection_rate
+*  Description: Gets the value of a parameter
+******************************************************************************************/
+double get_param_new_seed_infection_rate(parameters *params)
+{
+    return params->new_seed_infection_rate;
+}
+
+
+/*****************************************************************************************
 *  Name:        set_param_rng_seed
 *  Description: Sets the value of parameter
 ******************************************************************************************/
@@ -1964,6 +1983,26 @@ int set_param_novid_report_manual_traced(parameters *params, double value)
 int set_param_household_app_adoption(parameters *params, int value)
 {
     params->household_app_adoption = value;
+    return TRUE;
+}
+
+/*****************************************************************************************
+*  Name:        set_param_cluster_app_adoption
+*  Description: Sets the value of parameter
+******************************************************************************************/
+int set_param_cluster_app_adoption(parameters *params, int value)
+{
+    params->cluster_app_adoption = value;
+    return TRUE;
+}
+
+/*****************************************************************************************
+*  Name:        set_param_new_seed_infection_rate
+*  Description: Sets the value of parameter
+******************************************************************************************/
+int set_param_new_seed_infection_rate(parameters *params, double value)
+{
+    params->new_seed_infection_rate = value;
     return TRUE;
 }
 

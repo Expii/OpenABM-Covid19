@@ -224,7 +224,7 @@ enum IMMUNE_TYPES{
 #define TEST_ORDERED -1
 #define TEST_ORDERED_PRIORITY -3
 #define NOT_RECURSIVE 1000
-#define MAX_TIME 500
+#define MAX_TIME 600
 #define MAX_INFECTIOUS_PERIOD 200
 #define N_DRAW_LIST 1000
 #define INPUT_CHAR_LEN 300
@@ -239,6 +239,7 @@ enum IMMUNE_TYPES{
 #define ALL_STRAINS -1
 
 #define MAX_NOVID_DIST 4
+#define N_CLUSTER_ITERATIONS 10
 #define DEBUG 0
 
 extern gsl_rng * rng;

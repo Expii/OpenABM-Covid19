@@ -13,9 +13,12 @@
 #include "network.h"
 #include "disease.h"
 #include "interventions.h"
+#include "hashset.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+
+#include <assert.h>
 
 /*****************************************************************************************
 *  Name:		set_up_transition_times
@@ -47,6 +50,7 @@ void set_up_app_users( model *model )
 	if ( model->params->household_app_adoption )
 	{
 		directory *dir = model->household_directory;
+		long n_users = 0;
 
 		long *permutation = calloc( dir->n_idx, sizeof( long ) );
 		for( idx = 0; idx < dir->n_idx; idx++)
@@ -69,8 +73,101 @@ void set_up_app_users( model *model )
 				{
 					individual *member = &(model->population[members[jdx]]);
 					member->app_user = TRUE;
+					n_users++;
 				}
 		}
+
+		if( model->params->cluster_app_adoption )
+		{
+			hashset **adj = calloc(dir->n_idx, sizeof(hashset*));
+			for( idx = 0; idx < dir->n_idx; idx++ )
+				adj[idx] = init_set();
+
+			network *net;
+			for( int j = 0; j < model->n_occupation_networks; j++ )
+			{
+				net = model->occupation_network[j];
+
+				for( long i = 0; i < net->n_edges; i++ )
+				{
+					long a = net->edges[i].id1;
+					long b = net->edges[i].id2;
+					long house_a = model->population[a].house_no;
+					long house_b = model->population[b].house_no;
+					if (house_a == house_b)
+						continue;
+					set_insert(adj[house_a], house_b);
+					set_insert(adj[house_b], house_a);
+				}
+			}
+			double target = 0, sum = 0;
+			for( age = 0; age < N_AGE_GROUPS; age++ )
+			{
+				target += fraction[age] * model->params->population[age];
+				sum += model->params->population[age];
+			}
+			target /= sum;
+
+			if (DEBUG) {
+				printf("target = %lf, real = %lf\n", target, 1.0*n_users/model->params->n_total);
+			}
+			
+			for( int i = 0; i < N_CLUSTER_ITERATIONS; i++ )
+			{
+				int n_flip = 0;
+				if (DEBUG) {
+					printf("before i = %d, real app adoption = %lf\n", i, 1.0*n_users/model->params->n_total);
+				}
+				for( idx = 0; idx < dir->n_idx; idx++ )
+				{
+					double real_fraction = 1.0*n_users/model->params->n_total;
+					double adj_fraction = 0;
+					for( int j = 0; j < adj[idx]->n_data; j++ )
+						if( adj[idx]->data[j].shift >= 0 )
+						{
+							long house = adj[idx]->data[j].key;
+							jdx = dir->val[house][0];
+							adj_fraction += model->population[jdx].app_user;
+						}
+					if( !set_empty(adj[idx]) )
+						adj_fraction /= set_size(adj[idx]);
+
+					double cutoff;
+					if( real_fraction < target )
+						cutoff = real_fraction/2;
+					else
+						cutoff = 1 - (1-real_fraction)/2;
+					//printf("adj_f = %lf, lo = %lf, hi = %lf, rf = %lf\n", adj_fraction, lo, hi, real_fraction);
+
+					if( adj_fraction < min(cutoff, 0.5) && model->population[dir->val[idx][0]].app_user )
+					{
+						for( jdx = 0; jdx < dir->n_jdx[idx]; jdx++ )
+						{
+							model->population[dir->val[idx][jdx]].app_user = FALSE;
+							n_users--;
+						}
+						n_flip++;
+					}
+					else if( adj_fraction > max(cutoff, 0.5) && !model->population[dir->val[idx][0]].app_user )
+					{
+						for( jdx = 0; jdx < dir->n_jdx[idx]; jdx++ )
+						{
+							model->population[dir->val[idx][jdx]].app_user = TRUE;
+							n_users++;
+						}
+						n_flip++;
+					}
+				}
+				if (DEBUG) {
+					printf("n_flip = %d, h_total = %ld\n", n_flip, dir->n_idx);
+				}
+			}
+
+			for( idx = 0; idx < dir->n_idx; idx++ )
+				destroy_set(adj[idx]);
+			free(adj);
+		}
+
 	}
 	else
 	{
@@ -106,12 +203,134 @@ void set_up_app_users( model *model )
 
 			free( users );
 		}
+
+		if( model->params->cluster_app_adoption )
+		{
+			hashset **adj = calloc(model->params->n_total, sizeof(hashset*));
+			for( idx = 0; idx < model->params->n_total; idx++ )
+				adj[idx] = init_set();
+
+			network *net;
+			for( int j = 0; j <= model->n_occupation_networks; j++ )
+			{
+				if (j < model->n_occupation_networks)
+					net = model->occupation_network[j];
+				else
+					net = model->household_network;
+
+				for( long i = 0; i < net->n_edges; i++ )
+				{
+					long a = net->edges[i].id1;
+					long b = net->edges[i].id2;
+					set_insert(adj[a], b);
+					set_insert(adj[b], a);
+				}
+			}
+
+			long real_n_users[N_AGE_GROUPS];
+			long total_pop[N_AGE_GROUPS];
+			for( age = 0; age < N_AGE_GROUPS; age++ )
+			{
+				real_n_users[age] = 0;
+				total_pop[age] = 0;
+				for( idx = 0; idx < model->params->n_total; idx++ )
+					if( model->population[ idx ].age_group == age )
+					{
+						real_n_users[age] += model->population[ idx ].app_user;
+						total_pop[age]++;
+					}
+				if (DEBUG) printf("age = %d, target = %lf, real = %lf\n", (int)age, fraction[age], 1.0*real_n_users[age]/total_pop[age]);
+			}
+
+			for( int i = 0; i < N_CLUSTER_ITERATIONS; i++ )
+			{
+				int n_flips = 0;
+				if (DEBUG) {
+					printf("before i = %d\n", i);
+					double cnt = 0;
+					for (int i = 0; i<model->params->n_total; i++)
+						cnt += model->population[i].app_user;
+					printf("real app adoption = %lf\n", cnt/model->params->n_total);
+				}
+				for( idx = 0; idx < model->params->n_total; idx++ )
+				{
+					age = model->population[idx].age_group;
+					double real_fraction = 1.0*real_n_users[age]/total_pop[age];
+					double adj_fraction = 0;
+					for( int j = 0; j < adj[idx]->n_data; j++ )
+						if( adj[idx]->data[j].shift >= 0 )
+						{
+							jdx = adj[idx]->data[j].key;
+							adj_fraction += model->population[jdx].app_user;
+						}
+					if( !set_empty(adj[idx]) )
+						adj_fraction /= set_size(adj[idx]);
+
+					double cutoff;
+					if( real_fraction < fraction[age] )
+						cutoff = real_fraction/4;
+					else
+						cutoff = 1 - (1-real_fraction)/4;
+					//printf("adj_f = %lf, lo = %lf, hi = %lf, rf = %lf\n", adj_fraction, lo, hi, real_fraction);
+
+					if( adj_fraction < min(cutoff, fraction[age]) && model->population[idx].app_user )
+					{
+						model->population[idx].app_user = FALSE;
+						real_n_users[age]--;
+						n_flips++;
+					}
+					else if( adj_fraction > max(cutoff, fraction[age]) && !model->population[idx].app_user )
+					{
+						model->population[idx].app_user = TRUE;
+						real_n_users[age]++;
+						n_flips++;
+					}
+				}
+				if (DEBUG) {
+					printf("n_flips = %d\n", n_flips);
+				}
+			}
+
+			for( idx = 0; idx < model->params->n_total; idx++ )
+				destroy_set(adj[idx]);
+			free(adj);
+		}
 	}
-	// TODO: remove
-	double cnt = 0;
-	for (int i = 0; i<model->params->n_total; i++)
-		cnt += model->population[i].app_user;
-	printf("real app adoption = %lf\n", cnt/model->params->n_total);
+
+	// TODO: error msg for not converging
+	if (TRUE) {
+		double cnt = 0;
+		for (int i = 0; i<model->params->n_total; i++)
+			cnt += model->population[i].app_user;
+		printf("real app adoption = %lf\n", cnt/model->params->n_total);
+
+		network *net;
+		double freq[4];
+		for (int i = 0; i<4; i++)
+			freq[i] = 0;
+		for( int j = 0; j <= model->n_occupation_networks; j++ )
+		{
+			if (j < model->n_occupation_networks)
+				net = model->occupation_network[j];
+			else
+				net = model->household_network;
+
+			for( long i = 0; i < net->n_edges; i++ )
+			{
+				long a = net->edges[i].id1;
+				long b = net->edges[i].id2;
+				short app_a = model->population[a].app_user;
+				short app_b = model->population[b].app_user;
+				freq[app_a + app_b]++;
+				freq[3]++;
+			}
+		}
+		for (int i = 0; i<3; i++)
+			freq[i] /= freq[3];
+		for (int i = 0; i<4; i++)
+			printf("freq[%d] = %lf\n", i, freq[i]);
+	}
+	assert(FALSE);
 }
 
 /*****************************************************************************************
@@ -245,8 +464,6 @@ trace_token* index_trace_token( model *model, individual *indiv )
 		indiv->index_trace_token = create_trace_token( model, indiv, model->time );
 		indiv->index_trace_token->contact_time = model->time;
 	}
-	//if (indiv->idx == 1994) 
-		//printf("\ni_t_t, indiv %ld, time = %d, contact_time = %d\n\n", indiv->idx, model->time, indiv->index_trace_token->contact_time);
 
 	return indiv->index_trace_token;
 }
@@ -919,6 +1136,7 @@ void intervention_manual_trace( model *model, individual *indiv )
 	trace_token *index_token = index_trace_token( model, indiv );
 	indiv->traced_on_this_trace = TRUE;
 
+	//printf("manual tracing indiv %ld\n", indiv->idx);
 	intervention_notify_contacts( model, indiv, 1, index_token, MANUAL_TRACE );
 
 	remove_traced_on_this_trace( model, indiv );
@@ -962,6 +1180,8 @@ void intervention_notify_contacts(
 
 	day = model->interaction_day_idx;
 
+	hashset *unique_idx = init_set(); // remove duplicate contacts
+
 	for( ddx = 0; ddx < params->quarantine_days; ddx++ )
 	{
 		n_contacts  = indiv->n_interactions[day];
@@ -987,10 +1207,17 @@ void intervention_notify_contacts(
 					if( inter->manual_traceable && model->manual_trace_notification_quota > 0 )
 					{
 						model->manual_trace_notification_quota--;
-						intervention_on_traced( model, contact, model->time - ddx, recursion_level, index_token, risk_scores[ contact->age_group ], trace_type );
-
-						if ( params->novid_on && contact->app_user && gsl_ran_bernoulli( rng, params->novid_report_manual_traced ))
-							intervention_novid_alert( model, contact, 1, index_token );
+						if ( params->novid_on )
+						{
+							if ( contact->app_user )
+							{
+								if ( !set_contains( unique_idx, contact->idx ) && gsl_ran_bernoulli( rng, params->novid_report_manual_traced ) )
+									intervention_novid_alert( model, contact, 1 );
+								set_insert( unique_idx, contact->idx );
+							}
+						}
+						else
+							intervention_on_traced( model, contact, model->time - ddx, recursion_level, index_token, risk_scores[ contact->age_group ], trace_type );
 					}
 				}
 				inter = inter->next;
@@ -1199,10 +1426,13 @@ void intervention_on_symptoms( model *model, individual *indiv )
 	if( !model->params->interventions_on )
 		return;
 
+	/*
+	// when daily_flu = 1, this blocks many people
 	if( indiv->index_trace_token != NULL ) {
-		printf("ERROR: index case got symptoms\n");
+		printf("indiv %ld has trace token\n", indiv->idx);
 		return;
 	}
+	*/
 //	if (indiv->quarantined)
 		//printf("i_o_s indiv already quarantined\n");
 
@@ -1220,18 +1450,23 @@ void intervention_on_symptoms( model *model, individual *indiv )
 	trace_token *index_token;
 	if( quarantine )
 	{
-		index_token  = index_trace_token( model, indiv );
-		index_token->index_status = SYMPTOMS_ONLY;
-
 		if (params->novid_on) {
-			// TODO: add app_report_prob for self and contacts
-			if (indiv->app_user)
+			if ( indiv->app_user && gsl_ran_bernoulli( rng, params->novid_report_manual_traced ) )
+				intervention_novid_alert( model, indiv, 0 );
+			if( params->manual_trace_on &&
+				( params->manual_trace_on_positive ||
+				  ( params->manual_trace_on_hospitalization && is_in_hospital( indiv ) ) ) &&
+				( params->quarantine_on_traced || params->test_on_traced )
+			)
 			{
-				intervention_novid_alert( model, indiv, 0, index_token );
+				add_individual_to_event_list( model, MANUAL_CONTACT_TRACING, indiv, model->time + params->manual_trace_delay, NULL );
 			}
 			return;
 		}
 		else {
+			index_token  = index_trace_token( model, indiv );
+			index_token->index_status = SYMPTOMS_ONLY;
+
 			time_event = model->time + sample_transition_time( model, SYMPTOMATIC_QUARANTINE );
 
 			intervention_quarantine_until( model, indiv, NULL, time_event, TRUE, NULL, model->time, 1 );
@@ -1243,11 +1478,11 @@ void intervention_on_symptoms( model *model, individual *indiv )
 				intervention_notify_contacts( model, indiv, 1, index_token, DIGITAL_TRACE );
 
 			remove_traced_on_this_trace( model, indiv );
-		}
 
-		if( indiv->index_token_release_event != NULL )
-			remove_event_from_event_list( model, indiv->index_token_release_event );
-		indiv->index_token_release_event = add_individual_to_event_list( model, TRACE_TOKEN_RELEASE, indiv, model->time + max(params->quarantine_length_self, params->quarantine_length_traced_symptoms), NULL );
+			if( indiv->index_token_release_event != NULL )
+				remove_event_from_event_list( model, indiv->index_token_release_event );
+			indiv->index_token_release_event = add_individual_to_event_list( model, TRACE_TOKEN_RELEASE, indiv, model->time + max(params->quarantine_length_self, params->quarantine_length_traced_symptoms), NULL );
+		}
 	}
 //	if( test )
 //		intervention_test_order( model, indiv, model->time + params->test_order_wait );
@@ -1303,8 +1538,6 @@ void intervention_on_positive_result( model *model, individual *indiv )
 	trace_token *index_token = index_trace_token( model, indiv );
 	index_token->index_status = POSITIVE_TEST;
 	int release_time = index_token->contact_time + params->quarantine_length_traced_positive;
-	//if (indiv->idx == 1994)
-		//printf("\ni_o_p_r, indiv %ld, time = %d, contact_time = %d, release_time = %d\n\n", indiv->idx, model->time, index_token->contact_time, release_time);
 
 	if( !is_in_hospital( indiv ) )
 	{
@@ -1323,7 +1556,7 @@ void intervention_on_positive_result( model *model, individual *indiv )
 		intervention_notify_contacts( model, indiv, 1, index_token, DIGITAL_TRACE );
 
 	if ( params->novid_on && indiv->app_user )
-		intervention_novid_alert( model, indiv, 0, index_token );
+		intervention_novid_alert( model, indiv, 0 );
 
 	if( params->manual_trace_on &&
 		( params->manual_trace_on_positive ||
@@ -1519,7 +1752,7 @@ int resolve_quarantine_reasons(int *quarantine_reasons)
 *  				alert other NOVID app users nearby
 *  Returns:		void
 ******************************************************************************************/
-void intervention_novid_alert(model *model, individual *indiv, int dist, trace_token *index_token) {
+void intervention_novid_alert(model *model, individual *indiv, int dist) {
 	for (int d = 0; d + dist < MAX_NOVID_DIST; d++) {
 		for (long i = 0; i < indiv->novid_n_adj[d]; i++) {
 			long idx2 = indiv->novid_adj_list[d][i];

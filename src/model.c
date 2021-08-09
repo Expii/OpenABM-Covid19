@@ -311,10 +311,6 @@ void set_up_novid_network( model *model )
 			net = model->occupation_network[j];
 		else
 			net = model->household_network;
-		if (j)
-			net = model->occupation_network[j-1];
-		else
-			net = model->household_network;
 
 		for (long i = 0; i < net->n_edges; i++) {
 			long a = net->edges[i].id1;
@@ -358,14 +354,16 @@ void set_up_novid_network( model *model )
 		for (long i = 0; i < n_total; i++) {
 			total[d] += indivs[i].novid_n_adj[d];
 		}
-		printf("avg_degree[%d] = %lf\n", d, 1.0*total[d]/n_total);
+		if (DEBUG) printf("avg_degree[%d] = %lf\n", d, 1.0*total[d]/n_total);
 	}
 	for (int i = 0; i<30; i++)
 		freq[i] = 0;
 	for (long i = 0; i < n_total; i++)
 		freq[min(indivs[i].novid_n_adj[1],29)]++;
-	for (int i = 0; i<30; i++)
-		printf("deg %d: %ld\n", i, freq[i]);
+	if (DEBUG) {
+		for (int i = 0; i<30; i++)
+			printf("deg %d: %ld\n", i, freq[i]);
+	}
 
 	for (long i = 0; i < n_total; i++) {
 		destroy_set(all[i]);
@@ -392,6 +390,7 @@ void set_up_counters( model *model ){
 	model->n_quarantine_app_user = 0;
 	model->n_quarantine_app_user_infected = 0;
 	model->n_quarantine_app_user_recovered = 0;
+	model->n_app_user_infected = 0;
 	// Daily totals
 	model->n_quarantine_events = 0;
 	model->n_quarantine_events_app_user = 0;
@@ -441,7 +440,6 @@ void set_up_occupation_network( model *model )
 		for ( idx = 0; idx < params->n_total; idx++ )
 			if (model->population[idx].occupation_network == network)
 				people[n_people++] = idx;
-		printf("network = %d, n_people = %ld\n", network, n_people);
 
         model->occupation_network[network] = create_network( n_people, OCCUPATION );
         model->occupation_network[network]->skip_hospitalised = TRUE;
@@ -850,6 +848,38 @@ void set_up_seed_infection( model *model )
 	}
 
 	free( hospitalised_fraction );
+}
+
+/*****************************************************************************************
+*  Name:		new_seed_infections
+*  Description: add additional infections each day
+*  Returns:		void
+******************************************************************************************/
+void new_seed_infections( model *model )
+{
+	parameters *params = model->params;
+	int strain_idx = 0;
+	int end = round( params->new_seed_infection_rate * model->time );
+	int start = round( params->new_seed_infection_rate * (model->time - 1) );
+	int idx = 0;
+	int num_infect = end-start;
+	unsigned long int person;
+	individual *indiv;
+
+	while( idx < num_infect )
+	{
+		person = gsl_rng_uniform_int( rng, params->n_total );
+		indiv  = &(model->population[ person ]);
+
+		if( time_infected( indiv ) != NO_EVENT )
+			continue;
+
+		if( !params->hospital_on || indiv->worker_type == NOT_HEALTHCARE_WORKER )
+		{
+			if( seed_infect_by_idx( model, indiv->idx, strain_idx, -1 ) )
+				idx++;
+		}
+	}
 }
 
 /*****************************************************************************************
@@ -1551,6 +1581,7 @@ void return_interactions( model *model )
 ******************************************************************************************/
 int one_time_step( model *model )
 {
+	//printf("llllllllllllllll\t");
 	if (DEBUG) printf("\n");
 	(model->time)++;
 	if (DEBUG)
@@ -1573,6 +1604,7 @@ int one_time_step( model *model )
 	if (DEBUG) printf("\nSTART t = %d, nov = %d, status = %d, q = %d, cl = %d, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->app_user, indiv->status, indiv->quarantined, get_caution_level(model, indiv), is_in_hospital(indiv), indiv->caution_until[0], indiv->caution_until[1], indiv->caution_until[2], indiv->caution_until[3]);
 
 	transmit_virus( model );
+	new_seed_infections( model );
 
 	if (DEBUG) printf("MID   t = %d, nov = %d, status = %d, q = %d, cl = %d, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->app_user, indiv->status, indiv->quarantined, get_caution_level(model, indiv), is_in_hospital(indiv), indiv->caution_until[0], indiv->caution_until[1], indiv->caution_until[2], indiv->caution_until[3]);
 
@@ -1623,6 +1655,16 @@ int one_time_step( model *model )
 		intervention_smart_release( model );
 
 	model->n_quarantine_days += model->event_lists[QUARANTINED].n_current;
+	if (DEBUG) {
+		long freq[5];
+		for (int i = 0; i<5; i++)
+			freq[i] = 0;
+		for (long i = 0; i<model->params->n_total; i++)
+			freq[get_caution_level(model, &(model->population[i]))]++;
+		for (int i = 0; i<5; i++)
+			printf("%ld\t", freq[i]);
+		printf("\t\tllllllllllllllllllll\n");
+	}
 	if (DEBUG) printf("END   t = %d, nov = %d, status = %d, q = %d, cl = %d, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->app_user, indiv->status, indiv->quarantined, get_caution_level(model, indiv), is_in_hospital(indiv), indiv->caution_until[0], indiv->caution_until[1], indiv->caution_until[2], indiv->caution_until[3]);
 
 	if (DEBUG) printf("\n");

@@ -89,6 +89,7 @@ struct model{
 	long n_quarantine_events_app_user;
 	long n_quarantine_release_events;
 	long n_quarantine_release_events_app_user;
+	long n_app_user_infected;
 
 	long n_population_by_age[ N_AGE_GROUPS ];
 	long n_vaccinated_fully;

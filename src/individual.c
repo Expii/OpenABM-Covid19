@@ -160,8 +160,6 @@ void initialize_hazard(
 	for( int idx = 0; idx < params->max_n_strains; idx++ )
 		if( indiv->immune_full[ idx ] == current_time || current_time == 0 )
 		{
-			if (params->adjusted_susceptibility[indiv->age_group] != 1)
-				printf("ERROR\n");
 			indiv->hazard[idx] = gsl_ran_exponential( rng, 1.0 ) / params->adjusted_susceptibility[indiv->age_group];
 			indiv->immune_full[ idx ] = NO_IMMUNITY;
 		}

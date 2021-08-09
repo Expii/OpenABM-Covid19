@@ -169,6 +169,9 @@ void read_param_file( parameters *params)
 	check = fscanf(parameter_file, " %i ,",  &(params->n_seed_infection));
 	if( check < 1){ print_exit("Failed to read parameter n_seed_infection\n"); };
 
+	check = fscanf(parameter_file, " %lf ,",  &(params->new_seed_infection_rate));
+	if( check < 1){ print_exit("Failed to read parameter new_seed_infection_rate\n"); };
+
 	check = fscanf(parameter_file, " %lf ,", &(params->mean_infectious_period));
 	if( check < 1){ print_exit("Failed to read parameter mean_infectious_period\n"); };
 
@@ -538,6 +541,9 @@ void read_param_file( parameters *params)
 
 	check = fscanf(parameter_file, " %i ,", &(params->household_app_adoption));
 	if( check < 1){ print_exit("Failed to read parameter household_app_adoption\n"); };
+
+	check = fscanf(parameter_file, " %i ,", &(params->cluster_app_adoption));
+	if( check < 1){ print_exit("Failed to read parameter cluster_app_adoption\n"); };
 
 	fclose(parameter_file);
 }
@@ -958,8 +964,6 @@ void read_household_demographics_file( parameters *params)
 		}
 	}
 	fclose(hh_file);
-	printf("file = %s\n", params->input_household_file);
-	printf("N_REF_HOUSE = %ld\n", params->N_REFERENCE_HOUSEHOLDS);
 }
 
 
