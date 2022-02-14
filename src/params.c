@@ -513,6 +513,15 @@ int get_model_param_test_release_on_negative(model *model)
 }
 
 /*****************************************************************************************
+*  Name:		get_model_param_latent_test_probability
+*  Description: Gets the value of an double parameter
+******************************************************************************************/
+double get_model_param_latent_test_probability(model *model)
+{
+    return model->params->latent_test_probability;
+}
+
+/*****************************************************************************************
 *  Name:		get_model_param_test_on_traced
 *  Description: Gets the value of an int parameter
 ******************************************************************************************/
@@ -878,6 +887,16 @@ int set_model_param_test_on_traced( model *model, int value )
 int set_model_param_test_release_on_negative( model *model, int value )
 {
     model->params->test_release_on_negative = value;
+    return TRUE;
+}
+
+/*****************************************************************************************
+*  Name:		set_model_param_latent_test_probability
+*  Description: Sets the value of parameter
+******************************************************************************************/
+int set_model_param_latent_test_probability( model *model, double value )
+{
+    model->params->latent_test_probability = value;
     return TRUE;
 }
 
