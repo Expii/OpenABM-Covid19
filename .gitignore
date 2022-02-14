@@ -109,3 +109,6 @@ examples/.ipynb_checkpoints
 sandbox/.ipynb_checkpoints
 /Debug/
 /.pytest_cache/
+
+# Research files
+/research/results/*
