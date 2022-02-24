@@ -1762,3 +1762,38 @@ void intervention_novid_alert(model *model, individual *indiv, int dist) {
 		}
 	}
 }
+
+/*****************************************************************************************
+*  Name:		latent_test_individual
+*  Description: Test the individual randomly, according to the parameter 
+*  				latent_test_probability
+*  Returns: 	void
+******************************************************************************************/
+
+void latent_test_individual(
+	model *model, 
+	individual *indiv
+) 
+{
+	if (round_random(model->params->latent_test_probability)) 
+	{
+		intervention_test_take(model, indiv);	
+	}	
+}
+
+/*****************************************************************************************
+*  Name:		latent_test_all
+*  Description:	Runs latent_test_individual on everyone
+*  Returns: 	void
+******************************************************************************************/
+
+void latent_test_all(
+	model *model
+) 
+{
+	long pdx;
+	for( pdx = 0; pdx < model->params->n_total; pdx++ ) 
+	{
+		latent_test_individual(model, &(model->population[pdx]));	
+	}
+}

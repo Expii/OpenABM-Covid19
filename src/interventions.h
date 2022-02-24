@@ -91,4 +91,7 @@ void intervention_on_traced( model*, individual*, int, int, trace_token*, double
 void intervention_smart_release( model* );
 int resolve_quarantine_reasons(int *);
 
+void latent_test_individual( model*, individual* );
+void latent_test_all( model* );
+
 #endif /* INTERVENTIONS_H_ */

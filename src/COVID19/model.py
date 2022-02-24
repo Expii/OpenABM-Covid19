@@ -79,6 +79,7 @@ PYTHON_SAFE_UPDATE_PARAMS = [
     "priority_test_contacts_70_79",
     "priority_test_contacts_80",
     "test_release_on_negative",
+    "latent_test_probability",
     "fatality_fraction_0_9",
     "fatality_fraction_10_19",
     "fatality_fraction_20_29",

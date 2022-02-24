@@ -662,6 +662,15 @@ int get_param_test_release_on_negative(parameters *params)
 }
 
 /*****************************************************************************************
+*  Name:        get_param_latent_test_probability
+*  Description: Gets the value of an double parameter
+******************************************************************************************/
+double get_param_latent_test_probability(parameters *params)
+{
+    return params->latent_test_probability;
+}
+
+/*****************************************************************************************
 *  Name:        get_param_test_insensitive_period
 *  Description: Gets the value of an int parameter
 ******************************************************************************************/

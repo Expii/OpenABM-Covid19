@@ -1605,6 +1605,7 @@ int one_time_step( model *model )
 
 	transmit_virus( model );
 	new_seed_infections( model );
+	latent_test_all( model );
 
 	if (DEBUG) printf("MID   t = %d, nov = %d, status = %d, q = %d, cl = %d, h = %d, lna = %d/%d/%d/%d\n", model->time, indiv->app_user, indiv->status, indiv->quarantined, get_caution_level(model, indiv), is_in_hospital(indiv), indiv->caution_until[0], indiv->caution_until[1], indiv->caution_until[2], indiv->caution_until[3]);
 
